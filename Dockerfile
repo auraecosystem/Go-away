@@ -33,6 +33,7 @@ FROM --platform=$TARGETPLATFORM ${from}
 
 COPY --from=build /go/bin/go-away /bin/go-away
 COPY examples/snippets/ /snippets/
+COPY docker-entrypoint.sh /
 
 ENV TZ UTC
 
@@ -63,13 +64,4 @@ EXPOSE 6060/tcp
 
 ENV JWT_PRIVATE_KEY_SEED="${GOAWAY_JWT_PRIVATE_KEY_SEED}"
 
-ENTRYPOINT  /bin/go-away --bind "${GOAWAY_BIND}" --bind-network "${GOAWAY_BIND_NETWORK}" --socket-mode "${GOAWAY_SOCKET_MODE}" \
-            --metrics-bind "${GOAWAY_METRICS_BIND}" --debug-bind "${GOAWAY_DEBUG_BIND}" \
-            --config "${GOAWAY_CONFIG}" \
-            --policy "${GOAWAY_POLICY}" --policy-snippets "/snippets" --policy-snippets "${GOAWAY_POLICY_SNIPPETS}" \
-            --client-ip-header "${GOAWAY_CLIENT_IP_HEADER}" --backend-ip-header "${GOAWAY_BACKEND_IP_HEADER}" \
-            --cache "${GOAWAY_CACHE}" \
-            --challenge-template "${GOAWAY_CHALLENGE_TEMPLATE}" --challenge-template-theme "${GOAWAY_CHALLENGE_TEMPLATE_THEME}" \
-            --slog-level "${GOAWAY_SLOG_LEVEL}" \
-            --acme-autocert "${GOAWAY_ACME_AUTOCERT}" \
-            --backend "${GOAWAY_BACKEND}"
+ENTRYPOINT ["/docker-entrypoint.sh"]
