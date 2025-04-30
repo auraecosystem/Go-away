@@ -5,4 +5,4 @@ networks:
 
 conditions:
   is-bot-betterstack:
-      - &is-bot-betterstack '(userAgent.contains("Better Stack Better Uptime Bot") || userAgent.contains("Better Uptime Bot") || userAgent.contains("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.6533.17 Safari/537.36"))' && remoteAddress.network("betterstack")'
+      - &is-bot-betterstack '(userAgent.contains("Better Stack Better Uptime Bot") || userAgent.contains("Better Uptime Bot") || userAgent.contains("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.6533.17 Safari/537.36")) && remoteAddress.network("betterstack")'
