@@ -1,4 +1,5 @@
 /.bin
+/result
 *.gz
 *.br
 *.zst
