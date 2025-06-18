@@ -1,9 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 set -e
 set -o pipefail
 
-cd "$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+MY_DIR=$(cd $(dirname $(readlink -f $0));pwd)
+cd $MY_DIR
 
 do_compress () {
   find "$1" \( -type f -name "*.wasm" -o -name "*.css" -o -name "*.js" -o -name "*.mjs" \) -exec zopfli {} \;

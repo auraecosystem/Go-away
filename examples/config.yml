@@ -118,3 +118,36 @@ strings:
   #status_challenge_success: "Challenge success!"
   #status_challenge_done_took: "Done! Took"
   #status_error: "Error:"
+
+# Path of the policy file
+# policy: ''
+
+# Array of paths to the used policy snippets, e.g.:
+#
+# policy-snippets:
+# - /tmp/policy-1
+# - /tmp/policy-2
+
+# The cache path can be set explicitly, otherwise it's your OS's temp dir + "go-away-cache"
+#
+# cache-path: /tmp/go-away-cache
+
+# Change the log level from the default WARN here
+#
+# slog-level: WARN
+
+# Client HTTP header to fetch their IP address from (X-Real-Ip,
+# X-Client-Ip, X-Forwarded-For, Cf-Connecting-Ip, etc.)
+#
+# client-ip-header: X-Real-IP
+
+# Backend HTTP header to set the client IP address from, if empty
+# defaults to leaving Client header alone (X-Real-Ip, X-Client-Ip,
+# X-Forwarded-For, Cf-Connecting-Ip, etc.)
+#
+# backend-ip-header: X-Real-IP
+
+# Base path where to expose go-away package onto, challenges will be
+# served from here
+#
+# base-path: /.well-known/go-away

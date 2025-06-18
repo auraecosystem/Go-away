@@ -240,7 +240,17 @@ rules:
       # generic /*/*/ match gave too many options for scrapers to trigger random endpoints
       # this is a negative match of endpoints that Forgejo holds as reserved as users or orgs
       # see https://codeberg.org/forgejo/forgejo/src/branch/forgejo/models/user/user.go#L582
-      - '(path.matches("^/[^/]+/[^/]+/?$") || path.matches("^/[^/]+/[^/]+/badges/") || path.matches("^/[^/]+/[^/]+/(issues|pulls)/[0-9]+$") || (path.matches("^/[^/]+/?$") && size(query) == 0)) && !path.matches("(?i)^/(api|metrics|v2|assets|attachments|avatar|avatars|repo-avatars|captcha|login|org|repo|user|admin|devtest|explore|issues|pulls|milestones|notifications|ghost)(/|$)")'
+      - '(
+          path.matches("^/[^/]+/[^/]+/?$")
+          || path.matches("^/[^/]+/[^/]+/badges/")
+          || path.matches("^/[^/]+/[^/]+/(issues|pulls)/[0-9]+$")
+          || (
+            path.matches("^/[^/]+/?$") && size(query) == 0
+          )
+        )
+        && !path.matches(
+           "(?i)^/(api|metrics|v2|assets|attachments|avatar|avatars|repo-avatars|captcha|login|org|repo|user|admin|devtest|explore|issues|pulls|milestones|notifications|ghost)(/|$)"
+        )'
     action: pass
 
   # check a sequence of challenges
