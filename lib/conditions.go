@@ -14,6 +14,7 @@ import (
 func (state *State) initConditions() (err error) {
 	state.programEnv, err = http_cel.NewEnvironment(
 
+    cel.Variable("httpVersion", cel.StringType),
 		cel.Variable("fp", cel.MapType(cel.StringType, cel.StringType)),
 		cel.Function("inDNSBL",
 			cel.Overload("inDNSBL_ip",
