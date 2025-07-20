@@ -135,6 +135,8 @@ func (d *RequestData) ResolveName(name string) (any, bool) {
 		return d.header, true
 	case "fp":
 		return d.fp, true
+  case "httpVersion":
+    return d.r.Proto, true
 	default:
 		return nil, false
 	}
