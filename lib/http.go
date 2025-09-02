@@ -243,7 +243,7 @@ func (state *State) handleRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cleanupRequest := func(r *http.Request, fromChallenge bool, ruleName string, ruleAction policy.RuleAction) {
-		if fromChallenge {
+		if fromChallenge && ruleAction != policy.RuleActionPASS {
 			r.Header.Del("Referer")
 		}
 
