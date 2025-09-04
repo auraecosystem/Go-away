@@ -1,6 +1,13 @@
 #!/bin/sh
 set -e
 
+truthy() {
+  case "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" in
+    1|y|yes|true) return 0 ;;
+    *)            return 1 ;;
+  esac
+}
+
 if [ $# -eq 0 ] || [ "${1#-}" != "$1" ]; then
         set -- /bin/go-away \
                 --bind "${GOAWAY_BIND}" --bind-network "${GOAWAY_BIND_NETWORK}" --socket-mode "${GOAWAY_SOCKET_MODE}" \
@@ -15,7 +22,16 @@ if [ $# -eq 0 ] || [ "${1#-}" != "$1" ]; then
                 --slog-level "${GOAWAY_SLOG_LEVEL}" \
                 --acme-autocert "${GOAWAY_ACME_AUTOCERT}" \
                 --backend "${GOAWAY_BACKEND}" \
+                --cookie-samesite "${GOAWAY_COOKIE_SAMESITE}" \
                 "$@"
+fi
+
+# append conditionally
+if truthy "${GOAWAY_COOKIE_SECURE}"; then
+	set -- "$@" --cookie-secure
+fi
+if truthy "${GOAWAY_COOKIE_HTTPONLY}"; then
+	set -- "$@" --cookie-httponly
 fi
 
 if [ "$1" = "go-away" ]; then

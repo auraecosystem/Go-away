@@ -14,6 +14,9 @@ type StateSettings struct {
 	BasePath        string
 	ClientIpHeader  string
 	BackendIpHeader string
+	CookieSecure    bool
+	CookieHttpOnly  bool
+	CookieSameSite  string
 
 	ChallengeResponseCode int
 }

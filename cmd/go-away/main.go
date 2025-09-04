@@ -30,6 +30,12 @@ var internalCmdName = "go-away"
 var internalMainName = "go-away"
 var internalMainVersion = "dev"
 
+var (
+    cookieSecure   bool
+    cookieHttpOnly bool
+    cookieSameSite string
+)
+
 func init() {
 	buildInfo, ok := debug.ReadBuildInfo()
 	if !ok {
@@ -97,6 +103,13 @@ func main() {
 	flag.Var(&backends, "backend", "backend definition in the form of an.example.com=http://backend:1234 (can be specified multiple times)")
 
 	settingsFile := flag.String("config", "", "path to config override YAML file")
+
+	var cookieSecure bool
+	var cookieHttpOnly bool
+
+	flag.BoolVar(&cookieSecure, "cookie-secure", false, "Whether to set the Secure flag on the cookie that go-away creates.")
+	flag.BoolVar(&cookieHttpOnly, "cookie-httponly", false, "Whether to set the HttpOnly flag on the cookie that go-away creates.")
+	flag.StringVar(&cookieSameSite, "cookie-samesite", "Lax", "What Samesite value to set on the cookie that go-away creates. Default: Lax")
 
 	flag.Parse()
 
@@ -263,6 +276,9 @@ func main() {
 			ClientIpHeader:        *clientIpHeader,
 			BackendIpHeader:       *backendIpHeader,
 			ChallengeResponseCode: http.StatusTeapot,
+			CookieSecure:          cookieSecure,
+			CookieHttpOnly:        cookieHttpOnly,
+			CookieSameSite:        cookieSameSite,
 		}
 
 		state, err := lib.NewState(*p, opt, stateSettings)

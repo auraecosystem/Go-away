@@ -339,7 +339,7 @@ func (d *RequestData) ResponseHeaders(w http.ResponseWriter) {
 	if d.challengeMapModified {
 		expiration := d.Expiration(DefaultDuration)
 		if token, err := d.issueChallengeState(expiration); err == nil {
-			utils.SetCookie(d.cookieName, token, expiration, w, d.r)
+			utils.SetCookie(d.cookieName, token, expiration, w, d.r, d.State.Settings().CookieSecure, d.State.Settings().CookieHttpOnly, d.State.Settings().CookieSameSite)
 		} else {
 			d.State.Logger(d.r).Error("error while issuing cookie", "error", err)
 		}
