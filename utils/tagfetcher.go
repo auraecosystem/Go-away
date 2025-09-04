@@ -15,7 +15,7 @@ func FetchTags(backend http.Handler, uri *url.URL, kinds ...string) (result []ht
 		Method: http.MethodGet,
 		URL:    uri,
 		Header: http.Header{
-			"User-Agent": []string{"Mozilla 5.0 (compatible; go-away/1.0 fetch-tags) TwitterBot/1.0"},
+			"User-Agent": []string{"Mozilla 5.0 (compatible; go-away/1.0 fetch-tags) go-away/1.0"},
 			"Accept":     []string{"text/html,application/xhtml+xml"},
 		},
 		Close: true,
