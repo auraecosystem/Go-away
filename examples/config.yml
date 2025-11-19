@@ -1,5 +1,5 @@
 # Configuration file
-# Parameters that exist both on config and cmdline will have cmdline as preference
+# Settings in here will take precedence over command line arguments.
 
 bind:
   #address: ":8080"
