@@ -1,6 +1,6 @@
 networks:
   qwantbot:
-    - url: https://help.qwant.com/wp-content/uploads/sites/2/2025/01/qwantbot.json
+    - url: https://help.qwant.com/wp-content/uploads/sites/latest/qwantbot.json
       jq-path: '(.prefixes[] | select(has("ipv4Prefix")) | .ipv4Prefix), (.prefixes[] | select(has("ipv6Prefix")) | .ipv6Prefix)'
 
 conditions:
