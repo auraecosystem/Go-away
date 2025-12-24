@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 {{$theme := "forgejo-auto"}}{{ if .Theme }}{{$theme = .Theme}}{{ end }}
-{{$logo := "/assets/img/logo.png"}}{{ if .Logo }}{{$logo = .Logo}}{{ end }}
+{{ $png := "" }}
+{{ $svg := "" }}
+{{ if .Logo }}
+	{{$png = .Logo}}
+{{ else }}
+	{{$png = print .Path "/assets/static/logo.png?cacheBust=" .Random }}
+	{{$svg = print .Path "/assets/static/logo.svg?cacheBust=" .Random }}
+{{ end }}
 <html lang="en-US" data-theme="{{ $theme }}">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -30,8 +37,7 @@
 
     <link rel="stylesheet" href="/assets/css/index.css">
     <link rel="stylesheet" href="/assets/css/theme-{{$theme}}.css">
-
-
+	<link rel="stylesheet" href="{{ .Path }}/assets/static/common.css?cacheBust={{ .Random }}"/>
 </head>
 <body hx-swap="outerHTML" hx-ext="morph" hx-push-url="false">
 
@@ -40,7 +46,7 @@
     <nav id="navbar" aria-label="Navigation bar">
         <div class="navbar-left ui secondary menu">
             <a class="item" id="navbar-logo" href="/" aria-label="Home">
-                <img width="30" height="30" src="/assets/img/logo.svg" alt="Logo" aria-hidden="true">
+                <img width="30" height="30" src="/assets/img/logo.svg" alt="Logo" aria-hidden="true" style="animation:none !important">
             </a>
         </div>
     </nav>
@@ -49,7 +55,7 @@
         <div class="ui stackable middle very relaxed page grid">
             <div class="sixteen wide center aligned centered column">
                 <div>
-                    <img class="logo" id="image" src="{{ $logo }}" />
+                    <img height="180" width="180" class="logo" id="image" src="{{ $png }}" {{ if not .Logo }}srcset="{{ $svg }}, {{ $png }}"{{ end }}/>
                 </div>
                 <div class="hero">
                     <h2 class="ui icon header title" id="title">

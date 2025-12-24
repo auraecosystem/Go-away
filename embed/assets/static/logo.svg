@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12"><!--v2-->
+	<defs>
+		<mask id="radioactive" mask-type="alpha">
+			<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="-3 -3 6 6">
+				<defs>
+					<mask id="c" maskUnits="userSpaceOnUse" x="-3" y="-3" width="6" height="6">
+						<circle r="1.625" fill="none" stroke="#fff" stroke-width="1.75"/>
+					</mask>
+				</defs>
+				<circle r=".5"/>
+				<g mask="url(#c)">
+					<g id="a">
+						<path id="b" transform="rotate(30)" d="m0 0v2.88h3"/>
+						<use transform="scale(-1,1)" xlink:href="#b"/>
+					</g>
+					<use transform="rotate(120)" xlink:href="#a"/>
+					<use transform="rotate(240)" xlink:href="#a"/>
+				</g>
+			</svg>
+		</mask>
+		<image id="img" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAMAAAAPdrEwAAAAyVBMVEVKAErvAO/cANzZANnMAMzLAMvKAMrJAMnIAMiyALKqAKqmAKaiAKKhAKGgAKCVAJWUAJSTAJOQAJCOAI6MAIyKAIqIAIiHAIeGAIaFAIWEAISCAIKBAIGAAIB9AH18AHx7AHt6AHp5AHl4AHh3AHd1AHV0AHRzAHNyAHJxAHFwAHBvAG9uAG5tAG1sAGxpAGloAGhkAGRjAGNiAGJhAGFeAF5dAF1cAFxbAFtZAFlYAFhWAFZVAFVUAFRJAEk8ADw5ADk4ADg2ADab2H6TAAACl0lEQVR42rXX7VLaQBiG4aekgiZF0dCEYCEUFULIEqAkgrUinP9BNcsiH0q+lrz/77nmnWcmM1m8AZNZ6LXrrVFPLWt3jcf18m//d4dZN9Wr0jflojo0dHcxDfyGOcc21lusp1Z2sc2s2vVhHPqmwePpLGTt+q+PeLWRPavG5dLFj4GhD4QcitgT8eUutr0ml3nsinjcMJ4zyKa0PDlDfk+UkSAr8XIlXZ6CTJ7ByyQ/Z5T/7OUQZDIDlezZaBHJbR0jAlnEkJY7KTIDmdxHOUm25OWeBhnZySCrZWSXtVxyRQWRHMWgWEPEWBcpBwdxF3JrpMuPK5DJS6TLoxh5kCy/IoOsJsn+aTmKQXMzj8FS5KdDeZhDtpF2c4xspsoebqjkJpJlVV6ugccEN0cxipMvj+UrHMoNyTX0nfy+lxUoMXLKzf5etr/IIkac/JS8RrpcQjX5Znn5O4YGhcxjnJJZXlk9IbugkEUMV0p+S5d1kMkOYv75ZeTj+AVU8mKKz7JWlBwgj+znkccgWiOKMc8s+/lkA1Q3m0Gc7J0rh6TyhEwG3Rqg2xnFycaxHIJKDhj0Q7lfgBxsZRstIrmtg8cJss9lyMj3iJMNcbOsHMUgkx3sd7YLlXsaTsluAbJaBpUsnv808h0Kkhtf5AbWVPIDTsv+mTKPQSYvQbCGiP8hWW5Ly68OyOQuWJJcl5bF8z9N1qTkDgOV7DVxlmzGy9YtqOTaNcjkKyTJlZOymU1WoGSSvZwyj0Eml1D9LIeFyPvnf4y8kpNFDDJ5CCrZNeFKyGEWWQeZ7IBMXiCkkqfwqeQQJonMY5DJFuZCZnYU97VyFHdXPBayEn2wm/iFy0awi++Zs4kfor8Cp2uz5u02Hoo1xtbP/6BkpZMKX3lNAAAAAElFTkSuQmCC" width="90" height="90"/>
+	</defs><!--tried lots of things with all 3 animation tags, css and patterns;this is still the lightest option-->
+	<g mask="url(#radioactive)">
+		<use href="#img">
+			<animateMotion path="M 0 0 0 90" repeatCount="indefinite" calcMode="linear" dur="3.14159s"/>
+		</use>
+		<use href="#img">
+			<animateMotion path="M 0 -90 0 0" repeatCount="indefinite" calcMode="linear" dur="3.14159s"/>
+		</use>
+	</g>
+</svg>

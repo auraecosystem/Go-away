@@ -1,9 +1,17 @@
 <!DOCTYPE html>
-{{$logo := print .Path "/assets/static/logo.png?cacheBust=" .Random }}{{ if .Logo }}{{$logo = .Logo}}{{ end }}
+{{ $png := "" }}
+{{ $svg := "" }}
+{{ if .Logo }}
+	{{$png = .Logo}}
+{{ else }}
+	{{$png = print .Path "/assets/static/logo.png?cacheBust=" .Random }}
+	{{$svg = print .Path "/assets/static/logo.svg?cacheBust=" .Random }}
+{{ end }}
 <html>
 <head>
     <title>{{ .Title }}</title>
     <link rel="stylesheet" href="{{ .Path }}/assets/static/anubis/style.css?cacheBust={{ .Random }}"/>
+    <link rel="stylesheet" href="{{ .Path }}/assets/static/common.css?cacheBust={{ .Random }}"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="referrer" content="origin"/>
     {{ range .MetaTags }}
@@ -23,11 +31,14 @@
     </center>
 
     <div class="centered-div">
-        <img
-                id="image"
-                style="width:100%;max-width:256px;"
-                src="{{ $logo }}"
-        />
+    		<img
+    		        id="image"
+    		        style="width:100%;max-width:256px;"
+    		        src="{{ $png }}"
+    		        {{ if not .Logo }}
+    		            srcset="{{ $svg }}, {{ $png }}"
+    		        {{ end }}
+    		/>
         {{if .Challenge }}
         <p id="status">{{ .Strings.Get "status_loading_challenge" }} <em>{{ .Challenge }}</em>...</p>
         {{else if .Error}}

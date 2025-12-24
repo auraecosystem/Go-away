@@ -1,0 +1,7 @@
+@keyframes c{
+	0%{transform:rotateX(4deg) rotateY(0)}
+	50%{transform:rotateX(4deg) rotateY(180deg)}
+	100%{transform:rotateX(4deg) rotateY(360deg)}
+}
+img{animation:c linear 2s infinite}
+@media (prefers-reduced-motion){animation:c linear 8s infinite}
