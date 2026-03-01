@@ -5,12 +5,13 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"git.gammaspectra.live/git/go-away/utils"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"git.gammaspectra.live/git/go-away/utils"
 )
 
 var ErrInvalidToken = errors.New("invalid token")
@@ -94,13 +95,13 @@ func VerifyUrl(r *http.Request, reg *Registration, token string) (*url.URL, erro
 	uri.Path = reg.Path + VerifyChallengeUrlSuffix
 
 	data := RequestDataFromContext(r.Context())
-	values, _ := utils.ParseRawQuery(r.URL.RawQuery)
+	values, _ := utils.NewExactQueryParams(r.URL.RawQuery)
 	values.Set(QueryArgRequestId, url.QueryEscape(data.Id.String()))
 	values.Set(QueryArgRedirect, url.QueryEscape(redirectUrl.String()))
 	values.Set(QueryArgToken, url.QueryEscape(token))
 	values.Set(QueryArgChallenge, url.QueryEscape(reg.Name))
 	values.Set(QueryArgBust, url.QueryEscape(strconv.FormatInt(time.Now().UTC().UnixMilli(), 10)))
-	uri.RawQuery = utils.EncodeRawQuery(values)
+	uri.RawQuery = values.GetRaw()
 
 	return uri, nil
 }
@@ -112,13 +113,13 @@ func RedirectUrl(r *http.Request, reg *Registration) (*url.URL, error) {
 	}
 
 	data := RequestDataFromContext(r.Context())
-	values, _ := utils.ParseRawQuery(r.URL.RawQuery)
+	values, _ := utils.NewExactQueryParams(r.URL.RawQuery)
 	values.Set(QueryArgRequestId, url.QueryEscape(data.Id.String()))
 	if ref := r.Referer(); ref != "" {
 		values.Set(QueryArgReferer, url.QueryEscape(r.Referer()))
 	}
 	values.Set(QueryArgChallenge, url.QueryEscape(reg.Name))
-	uri.RawQuery = utils.EncodeRawQuery(values)
+	uri.RawQuery = values.GetRaw()
 
 	return uri, nil
 }

@@ -2,3 +2,5 @@
 *.gz
 *.br
 *.zst
+.idea/
+go-away

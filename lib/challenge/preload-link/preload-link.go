@@ -3,12 +3,13 @@ package preload_link
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"time"
+
 	"git.gammaspectra.live/git/go-away/lib/challenge"
 	"git.gammaspectra.live/git/go-away/utils"
 	"github.com/goccy/go-yaml"
 	"github.com/goccy/go-yaml/ast"
-	"net/http"
-	"time"
 )
 
 func init() {
@@ -69,9 +70,9 @@ func FillRegistration(state challenge.StateInterface, reg *challenge.Registratio
 		}
 
 		// remove redirect args
-		values, _ := utils.ParseRawQuery(uri.RawQuery)
+		values, _ := utils.NewExactQueryParams(uri.RawQuery)
 		values.Del(challenge.QueryArgRedirect)
-		uri.RawQuery = utils.EncodeRawQuery(values)
+		uri.RawQuery = values.GetRaw()
 
 		// Redirect URI must be absolute to work
 		uri.Scheme = utils.GetRequestScheme(r)

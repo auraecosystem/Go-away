@@ -1,19 +1,20 @@
 package lib
 
 import (
-	"codeberg.org/meta/gzipped/v2"
 	"fmt"
+	"log/slog"
+	"net/http"
+	"slices"
+	"strings"
+	"time"
+
+	"codeberg.org/meta/gzipped/v2"
 	"git.gammaspectra.live/git/go-away/embed"
 	"git.gammaspectra.live/git/go-away/lib/action"
 	"git.gammaspectra.live/git/go-away/lib/challenge"
 	"git.gammaspectra.live/git/go-away/lib/policy"
 	"git.gammaspectra.live/git/go-away/utils"
 	"golang.org/x/net/html"
-	"log/slog"
-	"net/http"
-	"slices"
-	"strings"
-	"time"
 )
 
 func GetLoggerForRequest(r *http.Request) *slog.Logger {
@@ -252,14 +253,11 @@ func (state *State) handleRequest(w http.ResponseWriter, r *http.Request) {
 			r.Header.Set("Referer", ref)
 		}
 
-		rawQ, _ := utils.ParseRawQuery(r.URL.RawQuery)
+		rawQ, _ := utils.NewExactQueryParams(r.URL.RawQuery)
 		// delete query parameters that were set by go-away
-		for k := range rawQ {
-			if strings.HasPrefix(k, challenge.QueryArgPrefix) {
-				rawQ.Del(k)
-			}
-		}
-		r.URL.RawQuery = utils.EncodeRawQuery(rawQ)
+		rawQ.DelPrefix(challenge.QueryArgPrefix)
+
+		r.URL.RawQuery = rawQ.GetRaw()
 
 		data.ExtraHeaders.Set("X-Away-Rule", ruleName)
 		data.ExtraHeaders.Set("X-Away-Action", string(ruleAction))

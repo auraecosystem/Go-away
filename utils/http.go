@@ -7,13 +7,11 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"maps"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/netip"
 	"net/url"
-	"slices"
 	"strings"
 	"time"
 )
@@ -181,39 +179,104 @@ func StaticCacheBust() string {
 	return staticCacheBust
 }
 
-func ParseRawQuery(rawQuery string) (m url.Values, err error) {
-	m = make(url.Values)
-	for rawQuery != "" {
+type ExactQueryParams []string
+
+func NewExactQueryParams(query string) (ExactQueryParams, error) {
+	parts := make([]string, 0)
+	var keyValue string
+	for query != "" {
 		var key string
-		key, rawQuery, _ = strings.Cut(rawQuery, "&")
+		keyValue, query, _ = strings.Cut(query, "&")
 		if strings.Contains(key, ";") {
-			err = fmt.Errorf("invalid semicolon separator in query")
+			return nil, fmt.Errorf("invalid semicolon separator in query")
+		}
+		if keyValue == "" {
 			continue
 		}
-		if key == "" {
-			continue
-		}
-		key, value, _ := strings.Cut(key, "=")
-		m[key] = append(m[key], value)
+		parts = append(parts, keyValue)
 	}
-	return m, err
+	return parts, nil
 }
 
-func EncodeRawQuery(v url.Values) string {
-	if len(v) == 0 {
-		return ""
-	}
-	var buf strings.Builder
-	for _, k := range slices.Sorted(maps.Keys(v)) {
-		vs := v[k]
-		for _, v := range vs {
-			if buf.Len() > 0 {
-				buf.WriteByte('&')
-			}
-			buf.WriteString(k)
-			buf.WriteByte('=')
-			buf.WriteString(v)
+func (e *ExactQueryParams) Get(keyToGet string) (string, bool) {
+	for _, part := range *e {
+		key, after, _ := strings.Cut(part, "=")
+		if key == keyToGet {
+			return after, true
 		}
 	}
+	return "", false
+}
+
+func (e *ExactQueryParams) GetRaw() string {
+	var buf strings.Builder
+	for i, part := range *e {
+		if i > 0 {
+			buf.WriteByte('&')
+		}
+		buf.WriteString(part)
+	}
 	return buf.String()
+}
+
+func (e *ExactQueryParams) Del(keyToDelete string) {
+	s := *e
+	for i := 0; i < len(s); {
+		key, _, _ := strings.Cut(s[i], "=")
+		if key == keyToDelete {
+			s = append(s[:i], s[i+1:]...)
+			continue
+		}
+		i++
+	}
+	*e = s
+}
+
+func (e *ExactQueryParams) DelPrefix(keyPrefixToDelete string) {
+	s := *e
+	for i := 0; i < len(s); {
+		key, _, _ := strings.Cut(s[i], "=")
+		if strings.HasPrefix(key, keyPrefixToDelete) {
+			s = append(s[:i], s[i+1:]...)
+			continue
+		}
+		i++
+	}
+	*e = s
+}
+
+func (e *ExactQueryParams) Set(keyToSet, value string) {
+	wasSet := false
+	s := *e
+	for i := 0; i < len(s); {
+		key, _, _ := strings.Cut(s[i], "=")
+		if key == keyToSet {
+			if !wasSet {
+				s[i] = keyToSet + "=" + value
+				wasSet = true
+			} else {
+				s = append(s[:i], s[i+1:]...)
+				continue
+			}
+		}
+		i++
+	}
+	if !wasSet {
+		s.Add(keyToSet, value)
+	}
+	*e = s
+}
+
+func (e *ExactQueryParams) Add(key, value string) {
+	*e = append(*e, key+"="+value)
+}
+
+func (e *ExactQueryParams) Has(keyToCheck string) bool {
+	for _, part := range *e {
+		key, _, _ := strings.Cut(part, "=")
+		if key == keyToCheck {
+			return true
+		}
+	}
+	return false
 }
