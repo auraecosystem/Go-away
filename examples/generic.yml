@@ -122,6 +122,39 @@ rules:
       - 'path == "/"'
     action: pass
 
+  # The "code" action replies immediately with a given HTTP status code without
+  # proxying to the backend. Optionally, response headers and a body can be set
+  # using Go text/template strings. Available template fields:
+  #   {{.Host}}       — request Host header (e.g. "example.com")
+  #   {{.Method}}     — HTTP method (e.g. "GET")
+  #   {{.Path}}       — URL path (e.g. "/foo/bar")
+  #   {{.RawQuery}}   — raw query string without leading "?" (e.g. "a=1&b=2")
+  #   {{.RequestURI}} — path and query combined (e.g. "/foo/bar?a=1&b=2")
+  #   {{.Proto}}      — HTTP protocol (e.g. "HTTP/1.1")
+  #
+  #- name: example-code-action
+  #  conditions:
+  #    - 'path.startsWith("/internal/")'
+  #  action: code
+  #  settings:
+  #    http-code: 404
+  #    headers:
+  #      X-Original-Url: "https://{{.Host}}{{.RequestURI}}"
+  #      X-Original-Method: "{{.Method}}"
+  #    body: "Not found: {{.Path}}"
+
+  # Example: nginx X-Accel-Redirect internal redirect.
+  # When nginx receives a response with X-Accel-Redirect it performs an
+  # internal redirect to the given path, allowing go-away to gate access
+  # to protected locations without proxying the file itself.
+  # See https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ignore_headers
+  #- name: example-nginx-accel-redirect
+  #  action: code
+  #  settings:
+  #    http-code: 200
+  #    headers:
+  #      X-Accel-Redirect: "{{.RequestURI}}"
+
   # check DNSBL and serve harder challenges
   # todo: make this specific to score
   - name: undesired-dnsbl
