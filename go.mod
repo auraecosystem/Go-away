@@ -1,8 +1,6 @@
 module git.gammaspectra.live/git/go-away
 
-go 1.24.0
-
-toolchain go1.24.2
+go 1.26
 
 require (
 	codeberg.org/gone/http-cel v1.0.0
@@ -17,6 +15,7 @@ require (
 	github.com/tetratelabs/wazero v1.9.0
 	github.com/yl2chen/cidranger v1.0.2
 	golang.org/x/crypto v0.37.0
+	golang.org/x/net v0.39.0
 )
 
 require (
@@ -32,7 +31,6 @@ require (
 	github.com/prometheus/procfs v0.16.1 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
 	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0 // indirect
-	golang.org/x/net v0.39.0 // indirect
 	golang.org/x/sys v0.32.0 // indirect
 	golang.org/x/text v0.24.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250422160041-2d3770c4ea7f // indirect

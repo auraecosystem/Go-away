@@ -1,5 +1,5 @@
-ARG from_builder=docker.io/golang:1.24-alpine3.21
-ARG from=docker.io/alpine:3.21
+ARG from_builder=docker.io/golang:1.26-alpine3.23
+ARG from=docker.io/alpine:3.23
 
 ARG BUILDPLATFORM
 
