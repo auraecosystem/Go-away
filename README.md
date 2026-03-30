@@ -3,7 +3,9 @@
 
 Self-hosted abuse detection and rule enforcement against low-effort mass AI scraping and bots. Uses conventional non-nuclear options.
 
-[![Docker Repository on Quay](https://quay.io/repository/wheresalice/go-away/status "Docker Repository on Quay")](https://quay.io/repository/wheresalice/go-away)
+```bash
+docker pull quay.io/wheresalice/go-away:latest
+```
 
 go-away sits in between your site and the Internet / upstream proxy.
 
