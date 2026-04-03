@@ -6,7 +6,7 @@ require (
 	codeberg.org/gone/http-cel v1.0.0
 	codeberg.org/meta/gzipped/v2 v2.0.0-20231111234332-aa70c3194756
 	github.com/alphadose/haxmap v1.4.1
-	github.com/go-jose/go-jose/v4 v4.1.0
+	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/goccy/go-yaml v1.17.1
 	github.com/google/cel-go v0.25.0
 	github.com/itchyny/gojq v0.12.17
