@@ -13,7 +13,7 @@ var DefaultStrings = utils.NewStrings(map[string]string{
 	"details_title": "Why am I seeing this?",
 	"details_text": `
 <p>
-	You are seeing this because the administrator of this website has set up <a href="https://git.gammaspectra.live/git/go-away">go-away</a> 
+	You are seeing this because the administrator of this website has set up <a href="https://codeberg.org/wheresalice/go-away">go-away</a> 
 	to protect the server against the scourge of <a href="https://thelibre.news/foss-infrastructure-is-under-attack-by-ai-companies/">AI companies aggressively scraping websites</a>.
 </p>
 <p>
