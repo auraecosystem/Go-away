@@ -35,7 +35,7 @@ type Link struct {
 
 var DefaultSettings = Settings{
 	Strings:           DefaultStrings,
-	ChallengeHttpCode: http.StatusTeapot,
+	ChallengeHttpCode: http.StatusTooManyRequests,
 	ChallengeTemplate: "anubis",
 	ChallengeTemplateOverrides: func() map[string]string {
 		m := make(map[string]string)

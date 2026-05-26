@@ -53,7 +53,7 @@ challenge-template-overrides:
   #Logo: "/my/custom/logo/path.png"
 
 # Change the default HTTP code sent when serving challenges.
-#challenge-http-code: 418
+#challenge-http-code: 429
 
 # Advanced backend configuration
 # Backends setup via cmdline will be added here
@@ -68,7 +68,6 @@ backends:
   #"git.example.com:8080":
   #  url: "http://forgejo:3000"
   #  ip-header: "X-Client-Ip"
-
 
   # Example HTTPS backend with host/SNI override, HTTP/2 and no certificate verification
   #"ssl.example.com":
@@ -118,4 +117,3 @@ strings:
   #status_challenge_success: "Challenge success!"
   #status_challenge_done_took: "Done! Took"
   #status_error: "Error:"
-

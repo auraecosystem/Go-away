@@ -27,9 +27,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var internalCmdName = "go-away"
-var internalMainName = "go-away"
-var internalMainVersion = "dev"
+var (
+	internalCmdName     = "go-away"
+	internalMainName    = "go-away"
+	internalMainVersion = "dev"
+)
 
 func init() {
 	buildInfo, ok := debug.ReadBuildInfo()
@@ -61,7 +63,6 @@ func fatal(err error) {
 }
 
 func main() {
-
 	opt := settings.DefaultSettings
 
 	flag.StringVar(&opt.Bind.Address, "bind", opt.Bind.Address, "network address to bind HTTP/HTTP(s) to")
@@ -85,7 +86,7 @@ func main() {
 	var policySnippets MultiVar
 	flag.Var(&policySnippets, "policy-snippets", "path to YAML snippets folder (can be specified multiple times)")
 
-	flag.IntVar(&opt.ChallengeHttpCode, "challenge-http-code", opt.ChallengeHttpCode, "default http-code to use when serving challenges (defaults to 418, I'm a Teapot)")
+	flag.IntVar(&opt.ChallengeHttpCode, "challenge-http-code", opt.ChallengeHttpCode, "default http-code to use when serving challenges (defaults to 429, Too Many Requests)")
 
 	flag.StringVar(&opt.ChallengeTemplate, "challenge-template", opt.ChallengeTemplate, "name or path of the challenge template to use (anubis, forgejo)")
 
@@ -160,7 +161,6 @@ func main() {
 	if kValue = os.Getenv("GOAWAY_JWT_PRIVATE_KEY_SEED"); kValue != "" {
 		// prefer first
 	} else if kValue = os.Getenv("JWT_PRIVATE_KEY_SEED"); kValue != "" {
-
 	} else if *jwtPrivateKeySeed != "" {
 		kValue = *jwtPrivateKeySeed
 	}
@@ -206,7 +206,7 @@ func main() {
 
 	for k, v := range opt.Backends {
 		if v.IpHeader == "" {
-			//set default value
+			// set default value
 			v.IpHeader = *backendIpHeader
 		}
 
@@ -226,12 +226,12 @@ func main() {
 	var cache utils.Cache
 	var acmeCache string
 	if *cachePath != "" {
-		err = os.MkdirAll(*cachePath, 0755)
+		err = os.MkdirAll(*cachePath, 0o755)
 		if err != nil {
 			fatal(fmt.Errorf("failed to create cache directory: %w", err))
 		}
 		for _, n := range []string{"networks", "acme"} {
-			err = os.MkdirAll(path.Join(*cachePath, n), 0755)
+			err = os.MkdirAll(path.Join(*cachePath, n), 0o755)
 			if err != nil {
 				fatal(fmt.Errorf("failed to create cache sub directory %s: %w", n, err))
 			}
@@ -269,7 +269,6 @@ func main() {
 		}
 
 		state, err := lib.NewState(*p, opt, stateSettings)
-
 		if err != nil {
 			return nil, fmt.Errorf("failed to create state: %w", err)
 		}
@@ -384,5 +383,4 @@ func main() {
 			fatal(err)
 		}
 	}
-
 }
