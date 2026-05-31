@@ -272,27 +272,18 @@ This would more or less eliminate the high rate low effort passive scraping and 
 
 go-away offers a highly configurable set of challenges and rules that you can adapt to new ways.
 
-## What's left?
+## Differences To Original
 
-go-away has most of the desired features from the original checklist that was made in its development. 
-However, a few points are left before go-away can be called v1.0.0:
+This is a fork of the original [go-away](https://git.gammaspectra.live/git/go-away) which no longer appears to be receiving updates. Since forking the following changes have happened:
 
-* [x] Several parts of the code are going through a refactor, which won't impact end users or operators.
-* [ ] Documentation is lacking and a more extensive one with inline example is in the works.
-* [x] Policy file syntax is going to stay mostly unchanged, except in the challenges definition section.
-* [ ] Allow end users to pick fallback challenges if any fail, specially with custom ones.
-* [ ] Replace Anubis-like default template with own one.
-* [x] Define strings and multi-language support for quick modification by operators without custom templates.
-* [ ] Have highly tested paths that match examples.
-* [x] Caching of temporary fetches, for example, network ranges.
-* [x] Allow live and dynamic policy reloading.
-* [x] Multiple domains / subdomains -> one backend handling, CEL rules for backends
-* [ ] Merge all rules and conditions into one large AST for higher performance.
-* [ ] Explore exposing a module for direct Caddy usage.
-* [x] More defined way of picking HTTP/HTTP(s) listeners and certificates.
-* [x] Expose metrics for challenge solve rates and acting on them.
-  * [ ] Metrics for common network ranges / AS / useragent
-
+- Added support for loading multiple TLS key pairs
+- Fixed qwantbot IP range json
+- Exposed HTTP version
+- Upgraded to go 1.26
+- Upgraded dependencies for security reasons
+- Renamed prometheus metrics to follow openmetrics standards
+- Changed default interim status from 418 to 429 to hint to bots not to retry
+- Added an action for HTTP 410 Gone to hint to bots not to retry
 
 
 ## Other Similar Projects
