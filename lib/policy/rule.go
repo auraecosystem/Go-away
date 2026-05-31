@@ -29,6 +29,9 @@ const (
 
 	// RuleActionCONTEXT Changes Request Context information or properties
 	RuleActionCONTEXT RuleAction = "CONTEXT"
+
+	// RuleActionGONE Returns a 410 GONE
+	RuleActionGONE RuleAction = "GONE"
 )
 
 type Rule struct {

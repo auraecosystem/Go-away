@@ -96,7 +96,7 @@ Most templates support overriding the logo. Specify that either via the [config.
 
 ### Advanced actions
 
-In addition to the common PASS / CHALLENGE / DENY rules, go-away offers more actions, plus any more extensible via code.
+In addition to the common PASS / CHALLENGE / DENY / GONE rules, go-away offers more actions, plus any more extensible via code.
 
 See the [Rule Actions page](https://codeberg.org/wheresalice/go-away/wiki/Rule-Actions.-) on the Wiki.
 
