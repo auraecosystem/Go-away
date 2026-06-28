@@ -27,6 +27,14 @@ type Gone struct {
 func (a Gone) Handle(logger *slog.Logger, w http.ResponseWriter, r *http.Request, done func() (backend http.Handler)) (next bool, err error) {
 	logger.Info("request denied")
 	data := challenge.RequestDataFromContext(r.Context())
-	data.State.ErrorPage(w, r, a.Code, fmt.Errorf("gone away: this page has gone away permanently %s/%s", data.Id.String(), a.RuleHash), "")
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set("Connection", "close")
+
+	data.ResponseHeaders(w)
+	w.WriteHeader(a.Code)
+	_, _ = w.Write([]byte(fmt.Errorf("access denied: denied by administrative rule %s/%s", data.Id.String(), a.RuleHash).Error()))
+
 	return false, nil
 }
