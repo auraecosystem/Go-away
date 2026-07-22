@@ -1,9 +1,0 @@
-{
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    "replacements:all",
-    "security:only-security-updates",
-    "workarounds:all"
-  ]
-}
