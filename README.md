@@ -272,36 +272,11 @@ This would more or less eliminate the high rate low effort passive scraping and 
 
 go-away offers a highly configurable set of challenges and rules that you can adapt to new ways.
 
-## Differences To Original
+## Upstream and Downstream Forks
 
-This is a fork of the original [go-away](https://git.gammaspectra.live/git/go-away) which no longer appears to be receiving updates. Since forking the following changes have happened:
+This is a fork of the original [go-away](https://git.gammaspectra.live/git/go-away) which no longer appears to be receiving updates.  The last commit to the original was 95ac08540b8cf45a5e4e6fce0758ed52113bc893, [compare the changes](https://codeberg.org/wheresalice/go-away/compare/95ac08540b8cf45a5e4e6fce0758ed52113bc893..main)
 
-- Added support for loading multiple TLS key pairs
-- Fixed qwantbot IP range json
-- Exposed HTTP version
-- Upgraded to go 1.26
-- Upgraded dependencies for security reasons
-- Renamed prometheus metrics to follow openmetrics standards
-- Changed default interim status from 418 to 429 to hint to bots not to retry
-- Added an action for HTTP 410 Gone to hint to bots not to retry
-
-
-## Other Similar Projects
-
-|                                         Project                                          |                                                                                                                                                      Source Code                                                                                                                                                      | Description                                                                                                                | Method                                       |
-|:----------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------------------------|:---------------------------------------------|
-|                          [Anubis](https://anubis.techaro.lol/)                           |                                       [![GitHub](https://img.shields.io/badge/GitHub-TecharoHQ/anubis-blue?style=flat&logo=github&labelColor=fff&logoColor=24292f)](https://github.com/TecharoHQ/anubis)<br/>Go / [MIT](https://github.com/TecharoHQ/anubis/blob/main/LICENSE)                                        | Proxy that uses JavaScript proof of work to weight request based on simple match rules                                     | JavaScript PoW (SHA-256)                     |
-|             [powxy](https://forge.lindenii.runxiyu.org/powxy/-/repos/powxy/)             |                  [![lindenii.runxiyu.org](https://img.shields.io/badge/lindenii-powxy-blue?style=flat&logo=git&labelColor=fff&logoColor=000)](https://forge.lindenii.runxiyu.org/powxy/-/repos/powxy/)<br/> Go / [BSD 2-Clause](https://forge.lindenii.runxiyu.org/powxy/-/repos/powxy/tree/LICENSE)                  | Powxy is a reverse proxy that protects your upstream service by challenging clients with proof-of-work.                    | JavaScript PoW (SHA-256) with manual program |
-|      [PoW! Bot Deterrent](https://git.sequentialread.com/forest/pow-bot-deterrent)       | [![SequentialRead](https://img.shields.io/badge/SequentialRead-forest/pow--bot--deterrent-blue?style=flat&logo=gitea&labelColor=fff&logoColor=000)](https://git.sequentialread.com/forest/pow-bot-deterrent)<br/> Go / [GPL v3.0](https://git.sequentialread.com/forest/pow-bot-deterrent/src/branch/main/LICENSE.md) | A proof-of-work based bot deterrent. Lightweight, self-hosted and copyleft licensed.                                       | JavaScript PoW (WASM scrypt)                 |
-|                        [CSSWAF](https://github.com/yzqzss/csswaf)                        |                                            [![GitHub](https://img.shields.io/badge/GitHub-yzqzss/csswaf-blue?style=flat&logo=github&labelColor=fff&logoColor=24292f)](https://github.com/yzqzss/csswaf)<br/>Go / [MIT](https://github.com/yzqzss/csswaf/blob/main/LICENSE)                                            | A CSS-based NoJS Anti-BOT WAF (Proof of Concept)                                                                           | Non-JS CSS Subresource loading order         |
-|                 [anticrawl](https://flak.tedunangst.com/post/anticrawl)                  |                                                        [![humungus.tedunangst.com](https://img.shields.io/badge/tedunangst-anticrawl-blue?style=flat&logo=mercurial&labelColor=fff&logoColor=000)](https://humungus.tedunangst.com/r/anticrawl)<br/>Go / None                                                         | Go http handler / proxy for regex based rules                                                                              | Non-JS manual Challenge/Response             |
-| [ngx_http_js_challenge_module](https://github.com/simon987/ngx_http_js_challenge_module) |     [![GitHub](https://img.shields.io/badge/GitHub-simon987/ngx_http_js_challenge_module-blue?style=flat&logo=github&labelColor=fff&logoColor=24292f)](https://github.com/simon987/ngx_http_js_challenge_module)<br/>C / [GPL v3.0](https://github.com/simon987/ngx_http_js_challenge_module/blob/master/LICENSE)     | Simple javascript proof-of-work based access for Nginx with virtually no overhead.                                         | JavaScript Challenge                         |
-|           [haproxy-protection](https://gitgud.io/fatchan/haproxy-protection/)            |                  [![GitGud](https://img.shields.io/badge/GitGud-fatchan/haproxy--protection-blue?style=flat&logo=gitlab&labelColor=fff&logoColor=000)](https://gitgud.io/fatchan/haproxy-protection/)<br/> Lua / [GPL v3.0](https://gitgud.io/fatchan/haproxy-protection/-/blob/master/LICENSE.txt)                   | HAProxy configuration and lua scripts allowing a challenge-response page where users solve a captcha and/or proof-of-work. | JavaScript Challenge / Captcha               |
-
-## Development
-
-This Go package can be used as a command on `git.gammaspectra.live/git/go-away/cmd/go-away` or a library under `git.gammaspectra.live/git/go-away/lib`
-
+Octopuce have a [downstream fork](https://octoforge.fr/octopuce/go-away/-/tree/debian-packaging/debian?ref_type=heads) which adds Debian packaging and a French translation of the strings in the default template
 
 
 
