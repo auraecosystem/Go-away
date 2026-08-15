@@ -26,6 +26,35 @@ func (state *State) initConditions() (err error) {
 			),
 		),
 
+		cel.Function("asn",
+			cel.MemberOverload("netIP_asn",
+				[]*cel.Type{cel.BytesType},
+				cel.IntType,
+				cel.UnaryBinding(func(val ref.Val) ref.Val {
+					var ip net.IP
+					switch v := val.Value().(type) {
+					case []byte:
+						ip = v
+					case net.IP:
+						ip = v
+					}
+					if ip == nil {
+						panic(fmt.Errorf("invalid ip %v", val.Value()))
+					}
+					if state.maxMindDB == nil {
+						panic("asn() called but MaxMind database not configured")
+					}
+					asn, err := state.maxMindDB.GetASN(ip)
+					if err != nil {
+						slog.Debug("maxmind ASN lookup failed", "remoteAddress", ip.String(), "error", err)
+						panic(err)
+					}
+					slog.Debug("maxmind ASN lookup", "remoteAddress", ip.String(), "asn", asn)
+					return types.Int(asn)
+				}),
+			),
+		),
+
 		cel.Function("network",
 			cel.MemberOverload("netIP_network_string",
 				[]*cel.Type{cel.BytesType, cel.StringType},
@@ -125,10 +154,15 @@ func (state *State) RegisterCondition(operator string, conditions ...string) (ce
 		return nil, fmt.Errorf("output type is not bool")
 	}
 
+	var asnErr error
 	walkExpr(compiledAst.NativeRep().Expr(), func(e ast.Expr) {
 		if e.Kind() == ast.CallKind {
 			call := e.AsCall()
 			switch call.FunctionName() {
+			case "asn":
+				if call.IsMemberFunction() && len(call.Args()) == 0 && state.maxMindDB == nil {
+					asnErr = fmt.Errorf("condition uses asn() but no MaxMind database is configured")
+				}
 			// deprecated
 			case "inNetwork":
 				args := call.Args()
@@ -165,6 +199,10 @@ func (state *State) RegisterCondition(operator string, conditions ...string) (ce
 			}
 		}
 	})
+
+	if asnErr != nil {
+		return nil, asnErr
+	}
 
 	return http_cel.ProgramAst(state.ProgramEnv(), compiledAst)
 }

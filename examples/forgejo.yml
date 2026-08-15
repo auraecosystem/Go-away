@@ -7,12 +7,20 @@
 networks:
   # Networks will get included from snippets
 
+# ASN groups: default pre-fetches prefixes via RADb at startup; use lookup_method: maxmind
+# for a per-request MaxMind lookup instead (requires --maxmind-database /path/to/GeoLite2-ASN.mmdb).
+asns:
   huawei-cloud:
     - asn: 136907
   alibaba-cloud:
     - asn: 45102
   zenlayer-inc:
     - asn: 21859
+
+  # Example: use MaxMind database instead of RADb
+  # cloudflare:
+  # - asn: 13335
+  #   lookup_method: maxmind
 
 
 challenges:

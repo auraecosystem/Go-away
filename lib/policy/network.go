@@ -17,7 +17,10 @@ type Network struct {
 	// Fetches
 	Url  *string `yaml:"url,omitempty"`
 	File *string `yaml:"file,omitempty"`
-	ASN  *int    `yaml:"asn,omitempty"`
+	// ASN fetches prefixes via RADb.
+	//
+	// Deprecated: use a top-level asns policy entry instead.
+	ASN *int `yaml:"asn,omitempty"`
 
 	// Filtering
 	JqPath *string `yaml:"jq-path,omitempty"`
@@ -26,7 +29,23 @@ type Network struct {
 	Prefixes []string `yaml:"prefixes,omitempty"`
 }
 
+// ASNEntry resolves an ASN number to its IP prefixes.
+// Default (empty) pre-fetches prefixes via RADb at startup.
+// Set lookup_method to "maxmind" to perform per-request ASN lookup via MaxMind at runtime instead.
+type ASNEntry struct {
+	ASN          int    `yaml:"asn"`
+	LookupMethod string `yaml:"lookup_method,omitempty"`
+}
+
 func (n Network) FetchPrefixes(c *http.Client, whois *utils.RADb) (output []net.IPNet, err error) {
+
+	if n.ASN != nil {
+		result, err := whois.FetchASNets(*n.ASN)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch ASN %d: %w", *n.ASN, err)
+		}
+		return result, nil
+	}
 
 	if len(n.Prefixes) > 0 {
 		for _, prefix := range n.Prefixes {
@@ -56,12 +75,6 @@ func (n Network) FetchPrefixes(c *http.Client, whois *utils.RADb) (output []net.
 		}
 		defer file.Close()
 		reader = file
-	} else if n.ASN != nil {
-		result, err := whois.FetchASNets(*n.ASN)
-		if err != nil {
-			return nil, fmt.Errorf("failed to fetch ASN %d: %v", *n.ASN, err)
-		}
-		return result, nil
 	} else {
 		if len(output) > 0 {
 			return output, nil
@@ -125,6 +138,14 @@ func (n Network) FetchPrefixes(c *http.Client, whois *utils.RADb) (output []net.
 		return nil, errors.New("no jq-path or regex specified")
 	}
 	return output, nil
+}
+
+func (a ASNEntry) FetchPrefixes(whois *utils.RADb) ([]net.IPNet, error) {
+	result, err := whois.FetchASNets(a.ASN)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch ASN %d from RADb: %w", a.ASN, err)
+	}
+	return result, nil
 }
 
 func parseCIDROrIP(value string) (net.IPNet, error) {

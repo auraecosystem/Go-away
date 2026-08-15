@@ -196,6 +196,32 @@ Example for _regex_:
       regex: "(?P<prefix>[0-9a-f:]+::/[0-9]+)"
 ```
 
+### ASN-based matching
+
+Instead of (or in addition to) static network ranges, clients can be matched by the ASN (Autonomous System Number) that announces their IP. Define named ASN groups under `asns` in the policy:
+
+```yaml
+asns:
+  huawei-cloud:
+  - asn: 136907
+  cloudflare:
+  - asn: 13335
+    lookup_method: maxmind
+```
+
+These groups are used the same way as `networks` entries, e.g. `remoteAddress.network("cloudflare")` or the deprecated `inNetwork("cloudflare", remoteAddress)`.
+
+Two lookup methods are available per entry:
+
+- **RADb (default)**: pre-fetches the ASN's announced prefixes from RADb at startup/reload and matches against that static prefix list. Does not require a MaxMind database, but the prefix list is only refreshed on reload and depends on RADb availability.
+- **MaxMind (`lookup_method: maxmind`)**: performs a per-request ASN lookup against a local [MaxMind GeoLite2-ASN](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data) `.mmdb` database. Requires passing `--maxmind-database /path/to/GeoLite2-ASN.mmdb` (or `maxmind-database:` in the config file). The database file is watched and reloaded automatically on change, so it can be updated in place (e.g. by a periodic `geoipupdate` job) without restarting go-away.
+
+A single ASN group can mix both lookup methods; a request matches if it hits either the RADb prefix list or a MaxMind entry's ASN (RADb checked first, per-request). If any entry in any group uses `lookup_method: maxmind`, a MaxMind database must be configured — go-away fails to start otherwise, it does not silently skip those entries.
+
+The CEL condition function `remoteAddress.asn() == 13335` is also available directly and always uses the MaxMind database.
+
+The old `asn:` field under a `networks` entry still works (matching this new default RADb behavior) but is deprecated in favor of the `asns` section above.
+
 
 ### Multiple backend support
 
@@ -324,6 +350,22 @@ However, a few points are left before go-away can be called v1.0.0:
 ## Development
 
 This Go package can be used as a command on `git.gammaspectra.live/git/go-away/cmd/go-away` or a library under `git.gammaspectra.live/git/go-away/lib`
+
+### Running tests
+
+Run the full test suite from the repository root:
+
+```sh
+go test ./...
+```
+
+To run tests for a specific package:
+
+```sh
+go test git.gammaspectra.live/git/go-away/lib
+go test git.gammaspectra.live/git/go-away/lib/policy
+go test git.gammaspectra.live/git/go-away/utils
+```
 
 
 

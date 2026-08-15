@@ -10,8 +10,11 @@ import (
 
 type Policy struct {
 
-	// Networks map of networks and prefixes to be loaded
+	// Networks map of named CIDR lists to be loaded from URLs, files, or static prefixes
 	Networks map[string][]Network `yaml:"networks"`
+
+	// ASNs map of named ASN groups to be resolved to prefixes via MaxMind (default) or RADb
+	ASNs map[string][]ASNEntry `yaml:"asns"`
 
 	Conditions map[string][]string `yaml:"conditions"`
 
@@ -23,6 +26,7 @@ type Policy struct {
 func NewPolicy(r io.Reader, snippetsDirectories ...string) (*Policy, error) {
 	var p Policy
 	p.Networks = make(map[string][]Network)
+	p.ASNs = make(map[string][]ASNEntry)
 	p.Conditions = make(map[string][]string)
 	p.Challenges = make(map[string]Challenge)
 
@@ -67,13 +71,21 @@ func NewPolicy(r io.Reader, snippetsDirectories ...string) (*Policy, error) {
 				return nil, err
 			}
 
-			// add networks / conditions / challenges definitions if they don't exist already
+			// add networks / asns / conditions / challenges definitions if they don't exist already
 
 			for k, v := range entryPolicy.Networks {
 				// add network if policy entry does not exist
 				_, ok := p.Networks[k]
 				if !ok {
 					p.Networks[k] = v
+				}
+			}
+
+			for k, v := range entryPolicy.ASNs {
+				// add ASN group if policy entry does not exist
+				_, ok := p.ASNs[k]
+				if !ok {
+					p.ASNs[k] = v
 				}
 			}
 

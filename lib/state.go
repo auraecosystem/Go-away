@@ -32,9 +32,10 @@ import (
 )
 
 type State struct {
-	client  *http.Client
-	radb    *utils.RADb
-	urlPath string
+	client    *http.Client
+	radb      *utils.RADb
+	maxMindDB *utils.MaxMindDB
+	urlPath   string
 
 	programEnv *cel.Env
 
@@ -45,7 +46,7 @@ type State struct {
 	opt      settings.Settings
 	settings policy.StateSettings
 
-	networks map[string]func() cidranger.Ranger
+	networks map[string]func() networkMatcher
 
 	challenges challenge.Register
 
@@ -58,6 +59,54 @@ type State struct {
 	templates map[string]*template.Template
 
 	Mux *http.ServeMux
+}
+
+type networkMatcher interface {
+	Contains(ip net.IP) (bool, error)
+}
+
+type emptyMatcher struct{}
+
+func (emptyMatcher) Contains(ip net.IP) (bool, error) {
+	return false, nil
+}
+
+type asnMatcher struct {
+	name      string
+	asns      []uint
+	maxMindDB *utils.MaxMindDB
+}
+
+func (m *asnMatcher) Contains(ip net.IP) (bool, error) {
+	asn, err := m.maxMindDB.GetASN(ip)
+	if err != nil {
+		slog.Debug("maxmind ASN lookup failed", "asn-group", m.name, "remoteAddress", ip.String(), "error", err)
+		return false, err
+	}
+	for _, expected := range m.asns {
+		if asn == expected {
+			slog.Debug("maxmind ASN lookup matched", "asn-group", m.name, "remoteAddress", ip.String(), "asn", asn)
+			return true, nil
+		}
+	}
+	slog.Debug("maxmind ASN lookup no match", "asn-group", m.name, "remoteAddress", ip.String(), "asn", asn)
+	return false, nil
+}
+
+// combinedASNMatcher handles ASN groups with mixed lookup methods.
+// radbFn is a sync.OnceValue that builds the prefix ranger from RADb;
+// maxmind performs per-request ASN lookup.
+type combinedASNMatcher struct {
+	radbFn  func() networkMatcher
+	maxmind *asnMatcher
+}
+
+func (m *combinedASNMatcher) Contains(ip net.IP) (bool, error) {
+	ok, err := m.radbFn().Contains(ip)
+	if err != nil || ok {
+		return ok, err
+	}
+	return m.maxmind.Contains(ip)
 }
 
 func NewState(p policy.Policy, opt settings.Settings, settings policy.StateSettings) (state *State, err error) {
@@ -74,6 +123,13 @@ func NewState(p policy.Policy, opt settings.Settings, settings policy.StateSetti
 	state.radb, err = utils.NewRADb()
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize RADb client: %w", err)
+	}
+
+	if opt.MaxMindDatabase != "" {
+		state.maxMindDB, err = utils.NewMaxMindDB(opt.MaxMindDatabase)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize MaxMind database: %w", err)
+		}
 	}
 
 	state.urlPath = state.Settings().BasePath
@@ -129,12 +185,12 @@ func NewState(p policy.Policy, opt settings.Settings, settings policy.StateSetti
 		state.opt.ChallengeTemplate = "challenge-" + state.opt.ChallengeTemplate + ".gohtml"
 	}
 
-	state.networks = make(map[string]func() cidranger.Ranger)
+	state.networks = make(map[string]func() networkMatcher)
 
 	networkCache := utils.CachePrefix(state.Settings().Cache, "networks/")
 
 	for k, network := range p.Networks {
-		state.networks[k] = sync.OnceValue[cidranger.Ranger](func() cidranger.Ranger {
+		state.networks[k] = sync.OnceValue[networkMatcher](func() networkMatcher {
 			ranger := cidranger.NewPCTrieRanger()
 			for i, e := range network {
 				prefixes, err := func() ([]net.IPNet, error) {
@@ -167,7 +223,6 @@ func NewState(p policy.Policy, opt settings.Settings, settings policy.StateSetti
 						if err == nil {
 							// use
 							return cached, nil
-
 						}
 					}
 
@@ -212,6 +267,101 @@ func NewState(p policy.Policy, opt settings.Settings, settings policy.StateSetti
 			slog.Warn("loaded network prefixes", "network", k, "count", ranger.Len())
 			return ranger
 		})
+	}
+
+	for k, asnGroup := range p.ASNs {
+		var radbEntries []policy.ASNEntry
+		var maxmindASNs []uint
+		for _, e := range asnGroup {
+			if e.LookupMethod == "maxmind" {
+				if state.maxMindDB == nil {
+					return nil, fmt.Errorf("asn group %q entry ASN %d requires MaxMind database but none is configured", k, e.ASN)
+				}
+				maxmindASNs = append(maxmindASNs, uint(e.ASN))
+			} else {
+				radbEntries = append(radbEntries, e)
+			}
+		}
+
+		var radbFn func() networkMatcher
+		if len(radbEntries) > 0 {
+			entries := radbEntries
+			groupKey := k
+			radbFn = sync.OnceValue[networkMatcher](func() networkMatcher {
+				ranger := cidranger.NewPCTrieRanger()
+				for _, e := range entries {
+					prefixes, err := func() ([]net.IPNet, error) {
+						cacheKey := fmt.Sprintf("asn-%s-%d", groupKey, e.ASN)
+
+						var cached []net.IPNet
+						if networkCache != nil {
+							//TODO: add randomness
+							cachedData, err := networkCache.Get(cacheKey, time.Hour*24)
+							var l []string
+							_ = json.Unmarshal(cachedData, &l)
+							for _, n := range l {
+								_, ipNet, err := net.ParseCIDR(n)
+								if err == nil {
+									cached = append(cached, *ipNet)
+								}
+							}
+							if err == nil {
+								return cached, nil
+							}
+						}
+
+						slog.Debug("loading ASN via RADb", "asn-group", groupKey, "asn", e.ASN)
+						prefixes, err := e.FetchPrefixes(state.radb)
+						if err != nil {
+							if len(cached) > 0 {
+								return cached, err
+							}
+							return nil, err
+						}
+						if networkCache != nil {
+							var l []string
+							for _, n := range prefixes {
+								l = append(l, n.String())
+							}
+							cachedData, err := json.Marshal(l)
+							if err == nil {
+								_ = networkCache.Set(cacheKey, cachedData)
+							}
+						}
+						return prefixes, nil
+					}()
+					if err != nil {
+						slog.Error("error loading ASN via RADb", "asn-group", groupKey, "asn", e.ASN, "error", err)
+						continue
+					}
+					for _, prefix := range prefixes {
+						err = ranger.Insert(cidranger.NewBasicRangerEntry(prefix))
+						if err != nil {
+							slog.Error("error inserting prefix", "asn-group", groupKey, "asn", e.ASN, "prefix", prefix.String(), "error", err)
+						}
+					}
+				}
+				slog.Warn("loaded ASN prefixes via RADb", "asn-group", groupKey, "count", ranger.Len())
+				return ranger
+			})
+		}
+
+		switch {
+		case len(maxmindASNs) > 0 && radbFn != nil:
+			combined := &combinedASNMatcher{radbFn: radbFn, maxmind: &asnMatcher{name: k, asns: maxmindASNs, maxMindDB: state.maxMindDB}}
+			state.networks[k] = sync.OnceValue[networkMatcher](func() networkMatcher {
+				combined.radbFn() // preload radb prefixes
+				return combined
+			})
+		case len(maxmindASNs) > 0:
+			mm := &asnMatcher{name: k, asns: maxmindASNs, maxMindDB: state.maxMindDB}
+			state.networks[k] = func() networkMatcher { return mm }
+		case radbFn != nil:
+			state.networks[k] = radbFn
+		default:
+			slog.Warn("asn group has no entries", "asn-group", k)
+			state.networks[k] = func() networkMatcher { return emptyMatcher{} }
+		}
 	}
 
 	err = state.initConditions()
@@ -292,6 +442,9 @@ func (state *State) Close() error {
 	case <-state.close:
 	default:
 		close(state.close)
+		if state.maxMindDB != nil {
+			state.maxMindDB.Close()
+		}
 		for _, c := range state.challenges {
 			if c.Object != nil {
 				err := c.Object.Close()

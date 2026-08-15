@@ -151,3 +151,9 @@ strings:
 # served from here
 #
 # base-path: /.well-known/go-away
+
+# Path to a MaxMind GeoLite2-ASN (.mmdb) database file for ASN lookups.
+# Required when using asns policy entries with lookup_method: maxmind.
+# The file is watched for changes and reloaded automatically.
+#
+# maxmind-database: /etc/go-away/GeoLite2-ASN.mmdb
