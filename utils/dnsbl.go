@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"errors"
 	"net"
 	"strconv"
 )
@@ -63,6 +64,11 @@ func (bl DNSBL) Lookup(ctx context.Context, ip net.IP) (DNSBLResponse, error) {
 
 	ips, err := bl.resolver.LookupIP(ctx, "ip4", string(target))
 	if err != nil {
+		var dnsErr *net.DNSError
+		if errors.As(err, &dnsErr) && dnsErr.IsNotFound {
+			// not listed on the blocklist
+			return ResponseGood, nil
+		}
 		return ResponseUnknown, err
 	}
 
