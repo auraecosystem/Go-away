@@ -1,6 +1,6 @@
 module git.gammaspectra.live/git/go-away
 
-go 1.26
+go 1.27
 
 require (
 	codeberg.org/gone/http-cel v1.0.0

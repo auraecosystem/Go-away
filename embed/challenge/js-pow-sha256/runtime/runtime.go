@@ -38,9 +38,9 @@ func MakeChallenge(in _interface.Allocation) (out _interface.Allocation) {
 		// create target
 		target := make([]byte, len(c))
 		nBits := difficulty
-		for i := 0; i < len(target); i++ {
+		for i := range target {
 			var v uint8
-			for j := 0; j < 8; j++ {
+			for range 8 {
 				v <<= 1
 				if nBits == 0 {
 					v |= 1
@@ -86,7 +86,7 @@ func VerifyChallenge(in _interface.Allocation) (out _interface.VerifyChallengeOu
 		hash := sha256.Sum256(result)
 
 		var leadingZeroesCount int
-		for i := 0; i < len(hash); i++ {
+		for i := range len(hash) {
 			leadingZeroes := bits.LeadingZeros8(hash[i])
 			leadingZeroesCount += leadingZeroes
 			if leadingZeroes < 8 {
