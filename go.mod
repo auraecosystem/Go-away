@@ -14,7 +14,7 @@ require (
 	github.com/prometheus/client_golang v1.22.0
 	github.com/tetratelabs/wazero v1.9.0
 	github.com/yl2chen/cidranger v1.0.2
-	golang.org/x/crypto v0.55.0
+	golang.org/x/crypto v0.56.0
 	golang.org/x/net v0.57.0
 )
 
