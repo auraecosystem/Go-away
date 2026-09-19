@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 VERSION="0.42.0"
 
 set -e
@@ -40,7 +40,7 @@ if [[ ! -d .bin/tinygo ]]; then
   esac
   url="https://github.com/tinygo-org/tinygo/releases/download/v${VERSION}/tinygo${VERSION}.${os}-${arch}.${ext}"
   archive="tinygo${VERSION}.${os}-${arch}.${ext}"
-  wget -c ${url}
+  wget -c "${url}"
   if [[ "$ext" == "zip" ]]; then
     command -v unzip >/dev/null || {
       echo "unzip is required" >&2
@@ -52,12 +52,13 @@ if [[ ! -d .bin/tinygo ]]; then
   else
     tar -xzf "$archive"
   fi
-else
-  pushd .bin/tinygo
+  popd
 fi
 
+pushd .bin/tinygo
+
 export TINYGOROOT="$(realpath .)"
-export PATH="$PATH:$(realpath ./bin/)"
+export PATH="$(realpath ./bin/):$PATH"
 
 popd
 
