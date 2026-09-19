@@ -1,4 +1,5 @@
 #!/bin/bash
+VERSION="0.42.0"
 
 set -e
 set -o pipefail
@@ -9,24 +10,54 @@ mkdir -p .bin/ 2>/dev/null
 
 # Setup tinygo first
 if [[ ! -d .bin/tinygo ]]; then
-  git clone --depth=1 --branch v0.38.0 https://github.com/tinygo-org/tinygo.git .bin/tinygo
-  pushd .bin/tinygo
-  git submodule update --init --recursive
-
-  go mod download -x && go mod verify
-
-  make llvm-source
-  make llvm-build
-
-  make binaryen STATIC=1
-
-  make build/release
+  pushd .bin
+  case "$(uname -s)" in
+  Linux)
+    os=linux
+    ext=tar.gz
+    ;;
+  Darwin)
+    os=darwin
+    ext=tar.gz
+    ;;
+  MINGW* | MSYS* | CYGWIN*)
+    os=windows
+    ext=zip
+    ;;
+  *)
+    echo "Unsupported OS: $(uname -s)" >&2
+    exit 1
+    ;;
+  esac
+  case "$(uname -m)" in
+  x86_64 | amd64) arch=amd64 ;;
+  aarch64 | arm64) arch=arm64 ;;
+  armv6l | armv7l | armv8l) arch=armhf ;;
+  *)
+    echo "Unsupported arch: $(uname -m)" >&2
+    exit 1
+    ;;
+  esac
+  url="https://github.com/tinygo-org/tinygo/releases/download/v${VERSION}/tinygo${VERSION}.${os}-${arch}.${ext}"
+  archive="tinygo${VERSION}.${os}-${arch}.${ext}"
+  wget -c ${url}
+  if [[ "$ext" == "zip" ]]; then
+    command -v unzip >/dev/null || {
+      echo "unzip is required" >&2
+      exit 1
+    }
+  fi
+  if [[ "$ext" == "zip" ]]; then
+    unzip -q "$archive"
+  else
+    tar -xzf "$archive"
+  fi
 else
   pushd .bin/tinygo
 fi
 
-export TINYGOROOT="$(realpath ./build/release/tinygo/)"
-export PATH="$PATH:$(realpath ./build/release/tinygo/bin/)"
+export TINYGOROOT="$(realpath .)"
+export PATH="$PATH:$(realpath ./bin/)"
 
 popd
 
