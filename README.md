@@ -2,7 +2,7 @@
 
 Self-hosted abuse detection and rule enforcement against low-effort mass AI scraping and bots. Uses conventional non-nuclear options.
 
-This is a fork of the original [go-away](https://git.gammaspectra.live/git/go-away) which no longer appears to be receiving updates
+This is a fork of the original [go-away](https://git.gammaspectra.live/git/go-away) which no longer appears to be receiving updates. The canonical repository for this fork is [https://codeberg.org/wheresalice/go-away](https://codeberg.org/wheresalice/go-away).
 
 ```bash
 docker pull quay.io/wheresalice/go-away:latest
