@@ -12,6 +12,9 @@ jobs:
       STORAGE_DRIVER: vfs
       BUILDAH_ISOLATION: chroot
     steps:
+      - name: Install Node (needed by the checkout action)
+        run: dnf install -y nodejs
+
       - name: Checkout
         uses: https://code.forgejo.org/actions/checkout@v4
 
