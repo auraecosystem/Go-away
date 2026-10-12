@@ -1,0 +1,19 @@
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  docker:
+    runs-on: services.wheresalice.info
+    steps:
+      - name: Checkout
+        uses: https://code.forgejo.org/actions/checkout@v4
+
+      - name: Log in to Quay
+        run: echo "${{ secrets.QUAY_PASSWORD }}" | docker login quay.io -u "${{ secrets.QUAY_USERNAME }}" --password-stdin
+
+      - name: Build and push
+        run: |
+          docker build --pull -t quay.io/wheresalice/go-away:latest .
+          docker push quay.io/wheresalice/go-away:latest
