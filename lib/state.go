@@ -66,11 +66,7 @@ func NewState(p policy.Policy, opt settings.Settings, settings policy.StateSetti
 	state.settings = settings
 	state.opt = opt
 	metrics.Reset()
-	state.client = &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
+	state.client = &http.Client{}
 	state.radb, err = utils.NewRADb()
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize RADb client: %w", err)
