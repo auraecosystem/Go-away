@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"errors"
+	"fmt"
 	"git.gammaspectra.live/git/go-away/lib/challenge"
 	"git.gammaspectra.live/git/go-away/utils"
 	"github.com/goccy/go-yaml"
@@ -23,6 +24,9 @@ type Parameters struct {
 	Host              string        `yaml:"dnsbl-host"`
 	Timeout           time.Duration `yaml:"dnsbl-timeout"`
 	Decay             time.Duration `yaml:"dnsbl-decay"`
+
+	// Resolver DNS server address to send queries to, as host:port. Uses the system resolver if empty
+	Resolver string `yaml:"dnsbl-resolver"`
 }
 
 var DefaultParameters = Parameters{
@@ -93,9 +97,20 @@ func FillRegistration(state challenge.StateInterface, reg *challenge.Registratio
 
 	decayMap := utils.NewDecayMap[[net.IPv6len]byte, utils.DNSBLResponse]()
 
-	dnsbl := utils.NewDNSBL(params.Host, &net.Resolver{
+	resolver := &net.Resolver{
 		PreferGo: true,
-	})
+	}
+	if params.Resolver != "" {
+		if _, _, err := net.SplitHostPort(params.Resolver); err != nil {
+			return fmt.Errorf("invalid dnsbl-resolver: %w", err)
+		}
+		resolver.Dial = func(ctx context.Context, network, _ string) (net.Conn, error) {
+			var d net.Dialer
+			return d.DialContext(ctx, network, params.Resolver)
+		}
+	}
+
+	dnsbl := utils.NewDNSBL(params.Host, resolver)
 
 	ob := make(closer)
 

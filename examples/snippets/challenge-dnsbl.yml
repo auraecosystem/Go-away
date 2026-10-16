@@ -4,3 +4,6 @@ challenges:
     parameters:
       dnsbl-decay: 1h
       dnsbl-timeout: 1s
+      # DNS server to send queries to, instead of the system resolver.
+      # Many blocklists refuse queries coming through public resolvers.
+      #dnsbl-resolver: "127.0.0.1:53"
