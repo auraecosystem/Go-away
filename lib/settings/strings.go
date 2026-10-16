@@ -35,4 +35,5 @@ var DefaultStrings = utils.NewStrings(map[string]string{
 	"status_challenge_success":   "Challenge success!",
 	"status_challenge_done_took": "Done! Took",
 	"status_error":               "Error:",
+	"status_solve_captcha":       "Solve the captcha below to continue.",
 })

@@ -28,13 +28,18 @@
                 style="width:100%;max-width:256px;"
                 src="{{ $logo }}"
         />
-        {{if .Challenge }}
+        {{if .Status }}
+        <p id="status">{{ .Status }}</p>
+        {{else if .Challenge }}
         <p id="status">{{ .Strings.Get "status_loading_challenge" }} <em>{{ .Challenge }}</em>...</p>
         {{else if .Error}}
         <p id="status">{{ .Strings.Get "status_error" }} {{ .Error }}</p>
         {{else}}
         <p id="status">{{ .Strings.Get "status_loading" }}</p>
         {{end}}
+        {{ range .ChallengeTags }}
+            {{ . }}
+        {{ end }}
         <details>
             <summary>{{ .Strings.Get "details_title" }}</summary>
 

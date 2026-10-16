@@ -43,19 +43,21 @@ var DefaultParameters = Parameters{
 const maxBodySize = 64 * 1024
 
 var widgetTemplate = template.Must(template.New("hcaptcha").Parse(`
-<form id="goaway-hcaptcha" method="POST" action="{{ .Action }}">
+<form id="goaway-hcaptcha" method="POST" action="{{ .Action }}" style="display: flex; justify-content: center; margin: 1em 0;">
     <input type="hidden" id="goaway-hcaptcha-token" name="{{ .TokenField }}" value=""/>
     <div class="h-captcha" data-sitekey="{{ .SiteKey }}" data-callback="goAwayHCaptchaCallback"></div>
 </form>
-<script type="text/javascript">
+`))
+
+var scriptTemplate = template.Must(template.New("hcaptcha-script").Parse(`<script src="{{ . }}" async defer></script>`))
+
+// callbackScript submits the form once the captcha is solved
+const callbackScript = template.HTML(`<script type="text/javascript">
     function goAwayHCaptchaCallback(token) {
         document.getElementById("goaway-hcaptcha-token").value = token;
         document.getElementById("goaway-hcaptcha").submit();
     }
-</script>
-`))
-
-var scriptTemplate = template.Must(template.New("hcaptcha-script").Parse(`<script src="{{ . }}" async defer></script>`))
+</script>`)
 
 type siteVerifyResponse struct {
 	Success    bool     `json:"success"`
@@ -165,8 +167,10 @@ func FillRegistration(state challenge.StateInterface, reg *challenge.Registratio
 		}
 
 		state.ChallengePage(w, r, state.Settings().ChallengeResponseCode, reg, map[string]any{
-			"HeaderTags": []template.HTML{template.HTML(script.String())},
-			"EndTags":    []template.HTML{template.HTML(widget.String())},
+			"Status":        state.Strings().Get("status_solve_captcha"),
+			"HeaderTags":    []template.HTML{template.HTML(script.String())},
+			"ChallengeTags": []template.HTML{template.HTML(widget.String())},
+			"EndTags":       []template.HTML{callbackScript},
 		})
 		return challenge.VerifyResultNone
 	}

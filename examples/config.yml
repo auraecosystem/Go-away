@@ -118,6 +118,7 @@ strings:
   #status_challenge_success: "Challenge success!"
   #status_challenge_done_took: "Done! Took"
   #status_error: "Error:"
+  #status_solve_captcha: "Solve the captcha below to continue."
 
 # Path of the policy file
 # policy: ''

@@ -56,13 +56,18 @@
                         {{ .Title }}
                     </h2>
 
-                    {{if .Challenge }}
+                    {{if .Status }}
+                    <h3 id="status">{{ .Status }}</h3>
+                    {{else if .Challenge }}
                     <h3 id="status">{{ .Strings.Get "status_loading_challenge" }} <em>{{ .Challenge }}</em>...</h3>
                     {{else if .Error}}
                     <h3 id="status">{{ .Strings.Get "status_error" }} {{ .Error }}</h3>
                     {{else}}
                     <h3 id="status">{{ .Strings.Get "status_loading" }}</h3>
                     {{end}}
+                    {{ range .ChallengeTags }}
+                        {{ . }}
+                    {{ end }}
 
                     <details>
                         <summary>{{ .Strings.Get "details_title" }}</summary>

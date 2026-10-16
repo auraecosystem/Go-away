@@ -224,8 +224,9 @@ func parseHTML(t *testing.T, body string) *html.Node {
 	return doc
 }
 
+// findElements returns the elements with the tag name, or any element when tag is empty, that match
 func findElements(n *html.Node, tag string, match func(n *html.Node) bool) (out []*html.Node) {
-	if n.Type == html.ElementNode && n.Data == tag && (match == nil || match(n)) {
+	if n.Type == html.ElementNode && (tag == "" || n.Data == tag) && (match == nil || match(n)) {
 		out = append(out, n)
 	}
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
@@ -506,6 +507,17 @@ func TestChallengesPass(t *testing.T) {
 				inputs := findElements(forms[0], "input", func(n *html.Node) bool { return attr(n, "type") == "hidden" })
 				if len(inputs) != 1 {
 					t.Fatalf("found %d hidden token inputs, want 1", len(inputs))
+				}
+				// the widget belongs in the page content next to the status, not after the footer
+				statuses := findElements(doc, "", func(n *html.Node) bool { return attr(n, "id") == "status" })
+				if len(statuses) != 1 {
+					t.Fatalf("found %d status elements, want 1", len(statuses))
+				}
+				if forms[0].Parent != statuses[0].Parent {
+					t.Error("hCaptcha form is not next to the status")
+				}
+				if status := strings.TrimSpace(textContent(statuses[0])); status != string(settings.DefaultStrings.Get("status_solve_captcha")) {
+					t.Errorf("status = %q", status)
 				}
 				action := resolve(t, res.url, attr(forms[0], "action"))
 
