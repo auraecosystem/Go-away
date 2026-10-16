@@ -2,10 +2,12 @@
 {{$logo := print .Path "/assets/static/logo.png?cacheBust=" .Random }}{{ if .Logo }}{{$logo = .Logo}}{{ end }}
 <html>
 <head>
+    <meta charset="utf-8"/>
     <title>{{ .Title }}</title>
     <link rel="stylesheet" href="{{ .Path }}/assets/static/anubis/style.css?cacheBust={{ .Random }}"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="referrer" content="origin"/>
+    <meta name="color-scheme" content="light dark"/>
     {{ range .MetaTags }}
     <meta {{ range $key, $value := . }}{{ $key | attr }}="{{ $value }}" {{end}}/>
     {{ end }}
@@ -16,62 +18,57 @@
     {{ . }}
     {{ end }}
 </head>
-<body id="top">
+<body id="top" data-state="{{ if .Error }}error{{ else if .Status }}waiting{{ else if .Challenge }}loading{{ end }}">
 <main>
-    <center>
-        <h1 id="title" class=".centered-div">{{ .Title }}</h1>
-    </center>
+    <article class="ticket">
+        <div class="ticket-main">
+            <img id="image" class="logo{{ if not .Logo }} logo-default{{ end }}" src="{{ $logo }}" alt=""/>
+            <h1 id="title">{{ .Title }}</h1>
 
-    <div class="centered-div">
-        <img
-                id="image"
-                style="width:100%;max-width:256px;"
-                src="{{ $logo }}"
-        />
-        {{if .Status }}
-        <p id="status">{{ .Status }}</p>
-        {{else if .Challenge }}
-        <p id="status">{{ .Strings.Get "status_loading_challenge" }} <em>{{ .Challenge }}</em>...</p>
-        {{else if .Error}}
-        <p id="status">{{ .Strings.Get "status_error" }} {{ .Error }}</p>
-        {{else}}
-        <p id="status">{{ .Strings.Get "status_loading" }}</p>
-        {{end}}
-        {{ range .ChallengeTags }}
-            {{ . }}
-        {{ end }}
-        <details>
-            <summary>{{ .Strings.Get "details_title" }}</summary>
+            {{if .Status }}
+            <p id="status">{{ .Status }}</p>
+            {{else if .Challenge }}
+            <p id="status">{{ .Strings.Get "status_loading_challenge" }} <em>{{ .Challenge }}</em>...</p>
+            {{else if .Error}}
+            <p id="status">{{ .Strings.Get "status_error" }} {{ .Error }}</p>
+            {{else}}
+            <p id="status">{{ .Strings.Get "status_loading" }}</p>
+            {{end}}
+            {{ range .ChallengeTags }}
+                {{ . }}
+            {{ end }}
 
-            {{.Strings.Get "details_text"}}
-        </details>
+            {{if .Redirect }}
+                <a class="button" role="button" href="{{ .Redirect }}">{{ .Strings.Get "button_refresh_page" }}</a>
+            {{end}}
 
-        {{if .Redirect }}
-            <a style="margin-top: 2em; margin-bottom: 2em;" role="button" href="{{ .Redirect }}">{{ .Strings.Get "button_refresh_page" }}</a>
-        {{end}}
+            {{if .EndTags }}
+                <noscript>
+                    {{ .Strings.Get "noscript_warning" }}
+                </noscript>
+            {{end}}
+        </div>
 
-        {{if .EndTags }}
-            <noscript>
-                {{ .Strings.Get "noscript_warning" }}
-            </noscript>
-        {{end}}
+        <div class="ticket-stub">
+            <details>
+                <summary>{{ .Strings.Get "details_title" }}</summary>
 
-        <p><small>{{ .Strings.Get "details_contact_admin_with_request_id" }}: <em>{{ .Id }}</em></small></p>
-    </div>
+                {{.Strings.Get "details_text"}}
+            </details>
 
+            <p class="request-id">
+                {{ .Strings.Get "details_contact_admin_with_request_id" }}:
+                <code>{{ .Id }}</code>
+            </p>
+        </div>
+    </article>
 
     <footer>
-        <center>
-            <p>
-                Protected by <a href="https://git.gammaspectra.live/git/go-away">go-away</a> :: Request Id <em>{{ .Id }}</em>
-
-                {{ range .Links }}
-                    :: <a href="{{ .URL }}">{{ .Name }}</a>
-                {{ end }}
-            </p>
-        </center>
+        <span>Protected by <a href="https://git.gammaspectra.live/git/go-away">go-away</a></span>
+        {{ range .Links }}
+            <a href="{{ .URL }}">{{ .Name }}</a>
+        {{ end }}
     </footer>
-
 
     {{ range .EndTags }}
         {{ . }}

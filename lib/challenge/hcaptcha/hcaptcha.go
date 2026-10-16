@@ -46,6 +46,12 @@ var widgetTemplate = template.Must(template.New("hcaptcha").Parse(`
 <form id="goaway-hcaptcha" method="POST" action="{{ .Action }}" style="display: flex; justify-content: center; margin: 1em 0;">
     <input type="hidden" id="goaway-hcaptcha-token" name="{{ .TokenField }}" value=""/>
     <div class="h-captcha" data-sitekey="{{ .SiteKey }}" data-callback="goAwayHCaptchaCallback"></div>
+    <script type="text/javascript">
+        // match the widget to the page color scheme, before api.js renders it
+        if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            document.currentScript.previousElementSibling.dataset.theme = "dark";
+        }
+    </script>
 </form>
 `))
 

@@ -16,104 +16,265 @@
 
 @font-face {
     font-family: "Iosevka Curly";
-    font-style: monospace;
+    font-style: normal;
     font-display: swap;
     src: url("iosevka-curly.woff2") format("woff2");
 }
 
-main {
-    font-family: Geist, sans-serif;
-    max-width: 50rem;
-    padding: 2rem;
-    margin: auto;
+:root {
+    --page: #d5c4a1;
+    --ticket: #fbf1c7;
+    --ink: #282828;
+    --muted: #665c54;
+    --accent: #8f3f71;
+    --on-accent: #fbf1c7;
+    --rule: #bdae93;
+
+    --notch: 0.75rem;
+    --radius: 0.875rem;
 }
 
-::selection {
-    background: #d3869b;
+@media (prefers-color-scheme: dark) {
+    :root {
+        --page: #1d2021;
+        --ticket: #282828;
+        --ink: #ebdbb2;
+        --muted: #a89984;
+        --accent: #d3869b;
+        --on-accent: #1d2021;
+        --rule: #504945;
+    }
+
+    /* the bundled logo is drawn in black, custom logos are left alone */
+    .logo-default {
+        filter: invert(0.88) sepia(0.2);
+    }
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    background: var(--page);
 }
 
 body {
-    background: #1d2021;
-    color: #f9f5d7;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    background: var(--page);
+    color: var(--ink);
+    font-family: Geist, system-ui, sans-serif;
+    font-size: 1rem;
+    line-height: 1.5;
 }
 
-pre {
-    background-color: #3c3836;
-    padding: 1em;
-    border: 0;
-    font-family: Iosevka Curly Iaso, monospace;
+main {
+    width: 100%;
+    max-width: 34rem;
 }
 
-a,
-a:active,
-a:visited {
-    color: #b16286;
-    background-color: #282828;
+::selection {
+    background: var(--accent);
+    color: var(--on-accent);
 }
 
-h1,
-h2,
-h3,
-h4,
-h5 {
-    margin-bottom: 0.1rem;
-    font-family: Podkova, serif;
+a {
+    color: var(--accent);
+    text-underline-offset: 0.2em;
 }
 
-blockquote {
-    border-left: 1px solid #bdae93;
-    margin: 0.5em 10px;
-    padding: 0.5em 10px;
+a:focus-visible,
+summary:focus-visible,
+code:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+}
+
+/* The ticket: the pass go-away hands out, with a tear-off stub for support details */
+
+.ticket {
+    background: var(--ticket);
+    border-radius: var(--radius);
+}
+
+.ticket-main {
+    padding: 2.5rem 2rem 2rem;
+    text-align: center;
+}
+
+.logo {
+    display: block;
+    width: 7rem;
+    height: 7rem;
+    margin: 0 auto 1.5rem;
+    object-fit: contain;
+}
+
+h1 {
+    margin: 0 0 0.75rem;
+    font-family: Podkova, Georgia, serif;
+    font-weight: 700;
+    font-size: clamp(1.625rem, 5vw, 2.125rem);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+}
+
+[data-state="error"] h1 {
+    color: var(--accent);
+}
+
+#status {
+    margin: 0 auto;
+    max-width: 26rem;
+    color: var(--muted);
+    text-wrap: pretty;
+    overflow-wrap: anywhere;
+}
+
+[data-state="loading"] #status::before {
+    content: "";
+    display: inline-block;
+    width: 0.8em;
+    height: 0.8em;
+    margin-right: 0.5em;
+    vertical-align: -0.05em;
+    border: 2px solid var(--rule);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(1turn);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    [data-state="loading"] #status::before {
+        animation: none;
+    }
+}
+
+.button {
+    display: inline-block;
+    margin-top: 1.5rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.button:hover {
+    filter: brightness(1.08);
+}
+
+noscript {
+    display: block;
+    margin-top: 1.5rem;
+    text-align: left;
+}
+
+/* the tear line: a dashed rule between two notches cut from the ticket edges */
+
+.ticket-stub {
+    position: relative;
+    padding: 1.25rem 2rem 1.5rem;
+    border-top: 2px dashed var(--rule);
+    font-size: 0.875rem;
+    color: var(--muted);
+}
+
+.ticket-stub::before,
+.ticket-stub::after {
+    content: "";
+    position: absolute;
+    top: calc(var(--notch) * -1 - 1px);
+    width: calc(var(--notch) * 2);
+    height: calc(var(--notch) * 2);
+    border-radius: 50%;
+    background: var(--page);
+}
+
+.ticket-stub::before {
+    left: calc(var(--notch) * -1);
+}
+
+.ticket-stub::after {
+    right: calc(var(--notch) * -1);
+}
+
+details summary {
+    cursor: pointer;
+    color: var(--ink);
+    font-weight: 500;
+}
+
+details[open] summary {
+    margin-bottom: 0.5rem;
+}
+
+details p {
+    margin: 0 0 0.75rem;
+}
+
+.request-id {
+    margin: 1rem 0 0;
+}
+
+.request-id code {
+    display: inline-block;
+    font-family: "Iosevka Curly", ui-monospace, monospace;
+    font-size: 0.9375rem;
+    color: var(--ink);
+    word-break: break-all;
+    user-select: all;
 }
 
 footer {
-    text-align: center;
-}
-
-@media (prefers-color-scheme: light) {
-    body {
-        background: #f9f5d7;
-        color: #1d2021;
-    }
-
-    pre {
-        background-color: #ebdbb2;
-        padding: 1em;
-        border: 0;
-    }
-
-    a,
-    a:active,
-    a:visited {
-        color: #b16286;
-        background-color: #fbf1c7;
-    }
-
-    h1,
-    h2,
-    h3,
-    h4,
-    h5 {
-        margin-bottom: 0.1rem;
-    }
-
-    blockquote {
-        border-left: 1px solid #655c54;
-        margin: 0.5em 10px;
-        padding: 0.5em 10px;
-    }
-}
-
-body,
-html {
-    height: 100%;
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
-    align-items: center;
-    margin-left: auto;
-    margin-right: auto;
+    gap: 0.5rem 1.25rem;
+    margin-top: 1.25rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
 }
 
-.centered-div {
-    text-align: center;
+@media (max-height: 40rem) {
+    .ticket-main {
+        padding-top: 1.75rem;
+    }
+
+    .logo {
+        width: 4.5rem;
+        height: 4.5rem;
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 30rem) {
+    .ticket-main {
+        padding: 2rem 1.25rem 1.5rem;
+    }
+
+    .ticket-stub {
+        padding: 1.25rem 1.25rem 1.5rem;
+    }
+
+    .logo {
+        width: 5.5rem;
+        height: 5.5rem;
+    }
 }
