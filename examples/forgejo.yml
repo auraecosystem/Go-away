@@ -22,6 +22,15 @@ asns:
   # - asn: 13335
   #   lookup_method: maxmind
 
+  # Example: load a list of datacenter ASNs from a url, refreshed every 12h (MaxMind only).
+  # Lists need a regex with an "asn" named match (and optionally "comment"), or a jq-path.
+  # Use it in a rule like remoteAddress.network("datacenters"), see undesired-networks below.
+  # datacenters:
+  #   - url: https://raw.githubusercontent.com/X4BNet/lists_vpn/refs/heads/main/input/datacenter/ASN.txt
+  #     regex: '(?im)^[ \t]*(?:AS)?(?P<asn>[0-9]+)[ \t]*(?:#[ \t]*(?P<comment>[^\r\n]*))?'
+  #     refresh: 12h
+  #     lookup_method: maxmind
+
 
 challenges:
   # Challenges will get included from snippets

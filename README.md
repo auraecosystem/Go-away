@@ -196,6 +196,38 @@ Example for _regex_:
       regex: "(?P<prefix>[0-9a-f:]+::/[0-9]+)"
 ```
 
+A regex only picks out what it matches, everything else in the content is ignored. For plain text lists, anchor it to the start of the line with `(?m)^[ \t]*`, so commented out entries like `# 10.0.0.0/8` or `// 10.0.0.0/8` are not matched as well:
+
+```yaml
+  internal:
+    - file: /etc/go-away/internal-networks.txt
+      regex: '(?m)^[ \t]*(?P<prefix>[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/[0-9]+)'
+```
+
+Lists are strict: if any matched value is not a valid prefix (or ASN, for ASN lists), the whole list is rejected with a loud error naming the offending line (or jq-path output), instead of loading part of it.
+
+#### Keeping lists up to date
+
+By default, url lists are fetched once when the policy is loaded, and are kept until go-away is restarted or the policy is reloaded. Set `refresh` to fetch a url again periodically (minimum `5m`):
+
+```yaml
+  googlebot:
+    - url: https://developers.google.com/static/search/apis/ipranges/googlebot.json
+      jq-path: '(.prefixes[] | select(has("ipv4Prefix")) | .ipv4Prefix), (.prefixes[] | select(has("ipv6Prefix")) | .ipv6Prefix)'
+      refresh: 6h
+      refresh-jitter: 30m
+```
+
+Each refresh is randomly moved by up to ± `refresh-jitter`, so many instances started at the same time do not all hit the list host at once. It defaults to 10% of `refresh`, can be at most half of it, and `refresh-jitter: 0s` disables it.
+
+`file` lists do not take `refresh`: they are checked for changes every minute and reloaded when modified, so they can be updated in place.
+
+When a refresh or reload fails (the host is down, the content does not parse, ...), the previously loaded entries are kept and an error is logged. A list that fails to load at all is logged as a loud error and matches nothing.
+
+Fetched url lists are also stored in the cache directory (`--cache`), and rewritten after every successful refresh. On startup, a cached copy is used without fetching while it is younger than 24 hours (or than `refresh`, if shorter). An older copy is only used when fetching fails, so a restart while the list host is down still starts with the last known entries.
+
+Downloads time out after one minute, follow up to 5 redirects (never from `https` to `http`) and are limited to 32 MiB.
+
 ### ASN-based matching
 
 Instead of (or in addition to) static network ranges, clients can be matched by the ASN (Autonomous System Number) that announces their IP. Define named ASN groups under `asns` in the policy:
@@ -211,6 +243,32 @@ asns:
 
 These groups are used the same way as `networks` entries, e.g. `remoteAddress.network("cloudflare")` or the deprecated `inNetwork("cloudflare", remoteAddress)`.
 
+Each entry is either a single `asn`, with an optional `comment`, or a list of ASNs loaded from a `url` or `file`:
+
+```yaml
+asns:
+  datacenters:
+    - url: https://raw.githubusercontent.com/X4BNet/lists_vpn/refs/heads/main/input/datacenter/ASN.txt
+      regex: '(?im)^[ \t]*(?:AS)?(?P<asn>[0-9]+)[ \t]*(?:#[ \t]*(?P<comment>[^\r\n]*))?'
+      refresh: 12h
+      lookup_method: maxmind
+    - file: /etc/go-away/extra-asns.json
+      jq-path: '.[] | {asn: .number, comment: .name}'
+      lookup_method: maxmind
+    - asn: 136907
+      comment: Huawei Cloud
+      lookup_method: maxmind
+```
+
+Lists need exactly one of:
+
+- `regex`: with an `asn` named match, and optionally a `comment` one. ASNs can be written as `13335` or `AS13335`. The example above parses lines like `AS45090 # Tencent cloud`, and being anchored to the start of the line, it skips commented out lines.
+- `jq-path`: for JSON, outputting ASNs as numbers, `"AS13335"` style strings, or `{"asn": ..., "comment": ...}` objects.
+
+As with network lists, a single invalid ASN rejects the whole list, with an error naming its line. Comments are only used in logs: with debug logging, a match logs the ASN and its comment.
+
+Lists are only supported with `lookup_method: maxmind`, as resolving hundreds of ASNs via RADb would flood it with queries. They are kept up to date the same way as network lists, see [Keeping lists up to date](#keeping-lists-up-to-date).
+
 Two lookup methods are available per entry:
 
 - **RADb (default)**: pre-fetches the ASN's announced prefixes from RADb at startup/reload and matches against that static prefix list. Does not require a MaxMind database, but the prefix list is only refreshed on reload and depends on RADb availability.
@@ -221,6 +279,29 @@ A single ASN group can mix both lookup methods; a request matches if it hits eit
 The CEL condition function `remoteAddress.asn() == 13335` is also available directly and always uses the MaxMind database.
 
 The old `asn:` field under a `networks` entry still works (matching this new default RADb behavior) but is deprecated in favor of the `asns` section above.
+
+### Allowing networks and ASNs
+
+Network ranges and ASN groups can also be used to let trusted clients through. Rules are evaluated in order, so place a rule with the `pass` action before any rule that would challenge or drop them:
+
+```yaml
+networks:
+  office:
+    - prefixes: ["203.0.113.0/24", "2001:db8::/32"]
+
+asns:
+  trusted-isp:
+    - asn: 3320
+      comment: Deutsche Telekom
+      lookup_method: maxmind
+
+rules:
+  - name: allow-trusted
+    conditions:
+      - 'remoteAddress.network("office")'
+      - 'remoteAddress.network("trusted-isp")'
+    action: pass
+```
 
 
 ### Multiple backend support
