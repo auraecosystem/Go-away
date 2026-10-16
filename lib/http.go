@@ -285,7 +285,6 @@ func (state *State) handleRequest(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			state.ErrorPage(w, r, http.StatusInternalServerError, err, "")
 			panic(err)
-			return
 		}
 
 		if !next {

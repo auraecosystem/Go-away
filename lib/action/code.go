@@ -59,26 +59,27 @@ var CodeDefaultSettings = CodeSettings{}
 //
 // Example policy rule:
 //
-//   - name: my-rule
-//     action: code
-//     settings:
-//       # HTTP status code to return. Required.
-//       http-code: 418
+//	rules:
+//	  - name: my-rule
+//	    action: code
+//	    settings:
+//	      # HTTP status code to return. Required.
+//	      http-code: 418
 //
-//       # Optional map of response headers to set.
-//       # Each value is a Go text/template string with access to the following fields:
-//       #   .Host       — request Host header (e.g. "example.com")
-//       #   .Method     — HTTP method (e.g. "GET")
-//       #   .Path       — URL path (e.g. "/foo/bar")
-//       #   .RawQuery   — raw query string without leading "?" (e.g. "a=1&b=2")
-//       #   .RequestURI — path and query combined (e.g. "/foo/bar?a=1&b=2")
-//       #   .Proto      — HTTP protocol (e.g. "HTTP/1.1")
-//       headers:
-//         X-Original-Url: "https://{{.Host}}{{.RequestURI}}"
-//         X-Original-Method: "{{.Method}}"
+//	      # Optional map of response headers to set.
+//	      # Each value is a Go text/template string with access to the following fields:
+//	      #   .Host       — request Host header (e.g. "example.com")
+//	      #   .Method     — HTTP method (e.g. "GET")
+//	      #   .Path       — URL path (e.g. "/foo/bar")
+//	      #   .RawQuery   — raw query string without leading "?" (e.g. "a=1&b=2")
+//	      #   .RequestURI — path and query combined (e.g. "/foo/bar?a=1&b=2")
+//	      #   .Proto      — HTTP protocol (e.g. "HTTP/1.1")
+//	      headers:
+//	        X-Original-Url: "https://{{.Host}}{{.RequestURI}}"
+//	        X-Original-Method: "{{.Method}}"
 //
-//       # Optional response body. Go text/template string with the same fields as headers.
-//       body: "Access denied for {{.Host}}"
+//	      # Optional response body. Go text/template string with the same fields as headers.
+//	      body: "Access denied for {{.Host}}"
 type CodeSettings struct {
 	Code    int               `yaml:"http-code"`
 	Headers map[string]string `yaml:"headers"`
