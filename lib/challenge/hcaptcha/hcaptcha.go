@@ -172,7 +172,7 @@ func FillRegistration(state challenge.StateInterface, reg *challenge.Registratio
 			return challenge.VerifyResultFail
 		}
 
-		state.ChallengePage(w, r, state.Settings().ChallengeResponseCode, reg, map[string]any{
+		state.ChallengePage(w, r, challenge.RequestDataFromContext(r.Context()).ChallengeResponseCode(), reg, map[string]any{
 			"Status":        state.Strings().Get("status_solve_captcha"),
 			"HeaderTags":    []template.HTML{template.HTML(script.String())},
 			"ChallengeTags": []template.HTML{template.HTML(widget.String())},

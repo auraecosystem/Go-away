@@ -97,7 +97,7 @@ func FillJavaScriptRegistration(state challenge.StateInterface, reg *challenge.R
 	}
 
 	reg.IssueChallenge = func(w http.ResponseWriter, r *http.Request, key challenge.Key, expiry time.Time) challenge.VerifyResult {
-		state.ChallengePage(w, r, state.Settings().ChallengeResponseCode, reg, map[string]any{
+		state.ChallengePage(w, r, challenge.RequestDataFromContext(r.Context()).ChallengeResponseCode(), reg, map[string]any{
 			"EndTags": []template.HTML{
 				template.HTML(fmt.Sprintf("<script async type=\"module\" src=\"%s?cacheBust=%s\"></script>", reg.Path+"/script.mjs", utils.StaticCacheBust())),
 			},

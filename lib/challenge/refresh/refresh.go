@@ -53,13 +53,13 @@ func FillRegistration(state challenge.StateInterface, reg *challenge.Registratio
 			if err != nil {
 				return challenge.VerifyResultFail
 			}
-			state.ChallengePage(w, r, state.Settings().ChallengeResponseCode, reg, map[string]any{
+			state.ChallengePage(w, r, challenge.RequestDataFromContext(r.Context()).ChallengeResponseCode(), reg, map[string]any{
 				"EndTags": []template.HTML{
 					template.HTML(fmt.Sprintf("<script type=\"text/javascript\">window.location = %s;</script>", string(data))),
 				},
 			})
 		} else if params.Mode == "meta" {
-			state.ChallengePage(w, r, state.Settings().ChallengeResponseCode, reg, map[string]any{
+			state.ChallengePage(w, r, challenge.RequestDataFromContext(r.Context()).ChallengeResponseCode(), reg, map[string]any{
 				"MetaTags": []map[string]string{
 					{
 						"http-equiv": "refresh",
@@ -71,7 +71,7 @@ func FillRegistration(state challenge.StateInterface, reg *challenge.Registratio
 			// self redirect!
 			w.Header().Set("Refresh", "0; url="+uri.String())
 
-			state.ChallengePage(w, r, state.Settings().ChallengeResponseCode, reg, nil)
+			state.ChallengePage(w, r, challenge.RequestDataFromContext(r.Context()).ChallengeResponseCode(), reg, nil)
 		}
 		return challenge.VerifyResultNone
 	}

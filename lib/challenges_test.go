@@ -34,6 +34,9 @@ const backendBody = "backend-ok"
 const testHCaptchaSecret = "test-secret"
 const testHCaptchaToken = "test-hcaptcha-token"
 
+// testRuleHttpCode is set as http-code on the /code/ rules, to differ from the global 418
+const testRuleHttpCode = http.StatusTooManyRequests
+
 var challengeTemplates = []string{"anubis", "forgejo"}
 
 type challengeEnv struct {
@@ -111,6 +114,7 @@ func newChallengeEnv(t *testing.T, template string, http2 bool) *challengeEnv {
 	policyYaml.WriteString("rules:\n")
 	for name := range challenges {
 		fmt.Fprintf(&policyYaml, "  - {name: %s, conditions: ['path == \"/c/%s\"'], action: challenge, settings: {challenges: [%s]}}\n", name, name, name)
+		fmt.Fprintf(&policyYaml, "  - {name: %s-code, conditions: ['path == \"/code/%s\"'], action: challenge, settings: {http-code: %d, challenges: [%s]}}\n", name, name, testRuleHttpCode, name)
 	}
 
 	p, err := policy.NewPolicy(strings.NewReader(policyYaml.String()))
@@ -601,4 +605,21 @@ func TestPreloadLinkChallengePasses(t *testing.T) {
 		t.Fatalf("protocol %s, want HTTP/2", res.Proto)
 	}
 	expectBackend(t, response{code: res.StatusCode, header: res.Header, body: string(body), url: res.Request.URL}, "preload-link")
+}
+
+func TestChallengeRuleHttpCode(t *testing.T) {
+	env := newChallengeEnv(t, "anubis", false)
+
+	// every runtime that serves a challenge page must use the rule http-code
+	for _, name := range []string{"header-refresh", "meta-refresh", "js-refresh", "resource-load", "js-pow-sha256", "hcaptcha"} {
+		t.Run(name, func(t *testing.T) {
+			client := env.client(t)
+			if res := get(t, client, env.url("/c/"+name)); res.code != http.StatusTeapot {
+				t.Fatalf("global code: status %d, want %d", res.code, http.StatusTeapot)
+			}
+			if res := get(t, client, env.url("/code/"+name)); res.code != testRuleHttpCode {
+				t.Fatalf("rule code: status %d, want %d", res.code, testRuleHttpCode)
+			}
+		})
+	}
 }

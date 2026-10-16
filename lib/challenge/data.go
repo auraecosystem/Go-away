@@ -54,6 +54,8 @@ type RequestData struct {
 	cookieName      string
 	issuedChallenge string
 
+	challengeResponseCode int
+
 	ExtraHeaders http.Header
 
 	r *http.Request
@@ -164,6 +166,19 @@ const (
 	RequestOptProxyMetaTags     = "proxy-meta-tags"
 	RequestOptProxySafeLinkTags = "proxy-safe-link-tags"
 )
+
+// SetChallengeResponseCode sets the HTTP code challenge pages are served with on this request
+func (d *RequestData) SetChallengeResponseCode(code int) {
+	d.challengeResponseCode = code
+}
+
+// ChallengeResponseCode returns the HTTP code to serve challenge pages with, defaulting to the global setting
+func (d *RequestData) ChallengeResponseCode() int {
+	if d.challengeResponseCode != 0 {
+		return d.challengeResponseCode
+	}
+	return d.State.Settings().ChallengeResponseCode
+}
 
 func (d *RequestData) SetOpt(n, v string) {
 	d.opts[n] = v

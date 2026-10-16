@@ -26,10 +26,6 @@ func init() {
 			}
 		}
 
-		if params.Code == 0 {
-			params.Code = state.Settings().ChallengeResponseCode
-		}
-
 		var regs []*challenge.Registration
 		for _, regName := range params.Challenges {
 			if reg, ok := state.GetChallengeByName(regName); ok {
@@ -103,7 +99,8 @@ type ChallengeSettings struct {
 }
 
 type Challenge struct {
-	RuleHash   string
+	RuleHash string
+	// Code HTTP code to serve challenge pages with, 0 uses the global setting
 	Code       int
 	Continue   bool
 	Challenges []*challenge.Registration
@@ -131,6 +128,7 @@ func (a Challenge) Handle(logger *slog.Logger, w http.ResponseWriter, r *http.Re
 		}
 	}
 	// none matched, issue challenges in sequential priority
+	data.SetChallengeResponseCode(a.Code)
 	for _, reg := range a.Challenges {
 		result := data.ChallengeVerify[reg.Id()]
 		state := data.ChallengeState[reg.Id()]

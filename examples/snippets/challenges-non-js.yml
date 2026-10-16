@@ -6,7 +6,8 @@ challenges:
   # Challenges with a redirect via Link header with rel=preload and early hints (non-JS, requires HTTP parsing, fetching and logic)
   # Works on HTTP/2 and above!
   preload-link:
-    condition: '"Sec-Fetch-Mode" in headers && headers["Sec-Fetch-Mode"] == "navigate"'
+    conditions:
+      - '"Sec-Fetch-Mode" in headers && headers["Sec-Fetch-Mode"] == "navigate"'
     runtime: "preload-link"
     parameters:
       preload-early-hint-deadline: 2s

@@ -151,7 +151,7 @@ strings:
 # Base path where to expose go-away package onto, challenges will be
 # served from here
 #
-# base-path: /.well-known/go-away
+# base-path: /.well-known/.go-away
 
 # Name prefix of the cookies set by go-away. Cookies starting with this
 # prefix are removed from requests before they reach the backends, so pick

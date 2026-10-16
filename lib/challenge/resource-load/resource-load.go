@@ -31,7 +31,7 @@ func FillRegistrationHeader(state challenge.StateInterface, reg *challenge.Regis
 		//TODO: adjust deadline
 		w.Header().Set("Refresh", "2; url="+redirectUri.String())
 
-		state.ChallengePage(w, r, state.Settings().ChallengeResponseCode, reg, map[string]any{
+		state.ChallengePage(w, r, challenge.RequestDataFromContext(r.Context()).ChallengeResponseCode(), reg, map[string]any{
 			"LinkTags": []map[string]string{
 				{
 					"href":        uri.String(),
