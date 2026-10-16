@@ -3,8 +3,7 @@
 
 Self-hosted abuse detection and rule enforcement against low-effort mass AI scraping and bots. Uses conventional non-nuclear options.
 
-[![Latest Release](https://img.shields.io/gitea/v/release/git/go-away?gitea_url=https%3A%2F%2Fgit.gammaspectra.live)](https://git.gammaspectra.live/git/go-away/releases)
-[![Build Status](https://ci.gammaspectra.live/api/badges/git/go-away/status.svg)](https://ci.gammaspectra.live/git/go-away)
+[![Latest Release](https://img.shields.io/gitea/v/release/karolyi/go-away?gitea_url=https%3A%2F%2Fgit.ksol.io)](https://git.ksol.io/karolyi/go-away/releases)
 [![Go Reference](https://pkg.go.dev/badge/git.gammaspectra.live/git/go-away.svg)](https://pkg.go.dev/git.gammaspectra.live/git/go-away)
 
 go-away sits in between your site and the Internet / upstream proxy.
@@ -23,25 +22,21 @@ Check this README for a general introduction. An [in-depth Wiki](https://git.kso
 
 ## Support
 
-If you have some suggestion or issue, feel free to open a [New Issue](https://git.gammaspectra.live/git/go-away/issues/new) on the repository. 
+If you have some suggestion or issue, feel free to open a [New Issue](https://git.ksol.io/karolyi/go-away/issues/new) on the repository. 
 
-[Pull Requests](https://git.gammaspectra.live/git/go-away/pulls) are encouraged and desired.
+[Pull Requests](https://git.ksol.io/karolyi/go-away/pulls) are encouraged and desired.
 
 For real-time chat and other support join IRC on [#go-away](ircs://irc.libera.chat/#go-away) on Libera.Chat [[WebIRC]](https://web.libera.chat/?nick=Guest?#go-away). The channel may not be monitored at all times, feel free to ping the operators there.
 
 ## Code Mirrors
 
-Source code is automatically pushed to the following mirrors. Packages are also mirrored on Codeberg and GitHub.
+Source code is automatically pushed to the following mirror.
 
-[![GammaSpectra.live](https://img.shields.io/badge/GammaSpectra.live-main+packages-green?style=flat&logo=data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgd2lkdGg9IjYwMCIgaGVpZ2h0PSI2MDAiIHZpZXdCb3g9Ii0zMDAgLTMwMCA2MDAgNjAwIj4KPGNpcmNsZSByPSI1MCIvPgo8cGF0aCBkPSJNNzUsMCBBIDc1LDc1IDAgMCwwIDM3LjUsLTY0Ljk1MiBMIDEyNSwtMjE2LjUwNiBBIDI1MCwyNTAgMCAwLDEgMjUwLDAgeiIgaWQ9ImJsZCIvPgo8dXNlIHhsaW5rOmhyZWY9IiNibGQiIHRyYW5zZm9ybT0icm90YXRlKDEyMCkiLz4KPHVzZSB4bGluazpocmVmPSIjYmxkIiB0cmFuc2Zvcm09InJvdGF0ZSgyNDApIi8+Cjwvc3ZnPg==&labelColor=fff)](https://git.gammaspectra.live/git/go-away) ![](https://git.gammaspectra.live/git/go-away/badges/stars.svg?style=flat) [![](https://git.gammaspectra.live/git/go-away/badges/issues/open.svg?style=flat)](https://git.gammaspectra.live/git/go-away/issues?state=open) [![](https://git.gammaspectra.live/git/go-away/badges/pulls/open.svg?style=flat)](https://git.gammaspectra.live/git/go-away/pulls?state=open)
+[![git.ksol.io](https://img.shields.io/badge/git.ksol.io-main-green?style=flat&logo=forgejo&labelColor=fff)](https://git.ksol.io/karolyi/go-away) ![](https://git.ksol.io/karolyi/go-away/badges/stars.svg?style=flat) [![](https://git.ksol.io/karolyi/go-away/badges/issues/open.svg?style=flat)](https://git.ksol.io/karolyi/go-away/issues?state=open) [![](https://git.ksol.io/karolyi/go-away/badges/pulls/open.svg?style=flat)](https://git.ksol.io/karolyi/go-away/pulls?state=open)
 
-[![Codeberg](https://img.shields.io/badge/Codeberg-mirror+packages-2185D0?style=flat&logo=codeberg&labelColor=fff)](https://codeberg.org/gone/go-away) ![](https://codeberg.org/gone/go-away/badges/stars.svg?style=flat)
+[![GammaSpectra.live](https://img.shields.io/badge/GammaSpectra.live-mirror-blue?style=flat&logo=data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgd2lkdGg9IjYwMCIgaGVpZ2h0PSI2MDAiIHZpZXdCb3g9Ii0zMDAgLTMwMCA2MDAgNjAwIj4KPGNpcmNsZSByPSI1MCIvPgo8cGF0aCBkPSJNNzUsMCBBIDc1LDc1IDAgMCwwIDM3LjUsLTY0Ljk1MiBMIDEyNSwtMjE2LjUwNiBBIDI1MCwyNTAgMCAwLDEgMjUwLDAgeiIgaWQ9ImJsZCIvPgo8dXNlIHhsaW5rOmhyZWY9IiNibGQiIHRyYW5zZm9ybT0icm90YXRlKDEyMCkiLz4KPHVzZSB4bGluazpocmVmPSIjYmxkIiB0cmFuc2Zvcm09InJvdGF0ZSgyNDApIi8+Cjwvc3ZnPg==&labelColor=fff)](https://git.gammaspectra.live/git/go-away)
 
-[![GitHub](https://img.shields.io/badge/GitHub-mirror+packages-blue?style=flat&logo=github&labelColor=fff&logoColor=24292f)](https://github.com/WeebDataHoarder/go-away) ![](https://img.shields.io/github/stars/WeebDataHoarder/go-away?style=flat)
-
-[![sourcehut](https://img.shields.io/badge/sourcehut-mirror-blue?style=flat&logo=sourcehut&labelColor=fff&logoColor=000)](https://git.sr.ht/~datahoarder/go-away)
-
-Note that issues or pull requests should be issued on the [main Forge](https://git.gammaspectra.live/git/go-away).
+Note that issues or pull requests should be issued on the [main Forge](https://git.ksol.io/karolyi/go-away).
 
 ## Installation and Setup
 
