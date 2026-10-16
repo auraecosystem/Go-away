@@ -52,6 +52,7 @@ type Settings struct {
 	ClientIpHeader             string            `yaml:"client-ip-header"`
 	BackendIpHeader            string            `yaml:"backend-ip-header"`
 	BasePath                   string            `yaml:"base-path"`
+	CookiePrefix               string            `yaml:"cookie-prefix"`
 	MaxMindASNDatabase         string            `yaml:"maxmind-asn-database"`
 	MaxMindCountryDatabase     string            `yaml:"maxmind-country-database"`
 
@@ -114,6 +115,7 @@ var DefaultSettings = Settings{
 	ClientIpHeader:    "",
 	BackendIpHeader:   "",
 	BasePath:          "/.well-known/." + InternalCmdName,
+	CookiePrefix:      utils.DefaultCookiePrefix,
 	createdBackends:   map[string]http.Handler{},
 	jwtPrivateKeySeed: "",
 }
@@ -232,6 +234,7 @@ func SetupConfiguration() (Settings, bool) {
 	templateLogo := flag.String("challenge-template-logo", settings.ChallengeTemplateOverrides["Logo"], "override template logo to use")
 
 	flag.StringVar(&settings.BasePath, "path", settings.BasePath, "base path where to expose go-away package onto, challenges will be served from here")
+	flag.StringVar(&settings.CookiePrefix, "cookie-prefix", settings.CookiePrefix, "name prefix of cookies set by go-away, cookies with this prefix are not passed to backends")
 
 	flag.StringVar(&settings.MaxMindASNDatabase, "maxmind-asn-database", settings.MaxMindASNDatabase, "path to MaxMind GeoLite2-ASN (.mmdb) database file for ASN lookups")
 	flag.StringVar(&settings.MaxMindCountryDatabase, "maxmind-country-database", settings.MaxMindCountryDatabase, "path to MaxMind GeoLite2-Country or GeoLite2-City (.mmdb) database file for country lookups")

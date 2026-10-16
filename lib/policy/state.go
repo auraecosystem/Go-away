@@ -14,6 +14,8 @@ type StateSettings struct {
 	BasePath        string
 	ClientIpHeader  string
 	BackendIpHeader string
+	// CookiePrefix Name prefix of cookies set by go-away, defaults to utils.DefaultCookiePrefix
+	CookiePrefix string
 
 	ChallengeResponseCode int
 }

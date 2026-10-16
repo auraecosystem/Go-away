@@ -268,7 +268,7 @@ func (state *State) handleRequest(w http.ResponseWriter, r *http.Request) {
 		cookies := r.Cookies()
 		r.Header.Del("Cookie")
 		for _, c := range cookies {
-			if !strings.HasPrefix(c.Name, utils.DefaultCookiePrefix) {
+			if !strings.HasPrefix(c.Name, state.Settings().CookiePrefix) {
 				r.AddCookie(c)
 			}
 		}

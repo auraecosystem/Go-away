@@ -152,6 +152,13 @@ strings:
 #
 # base-path: /.well-known/go-away
 
+# Name prefix of the cookies set by go-away. Cookies starting with this
+# prefix are removed from requests before they reach the backends, so pick
+# one that does not match any backend cookie. Changing it invalidates
+# existing cookies, and clients will need to pass challenges again.
+#
+# cookie-prefix: .go-away-
+
 # Path to a MaxMind GeoLite2-ASN (.mmdb) database file for ASN lookups.
 # Required when using asns policy entries with lookup_method: maxmind.
 # The file is watched for changes and reloaded automatically.

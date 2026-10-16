@@ -112,7 +112,7 @@ func CreateRequestData(r *http.Request, state StateInterface) (*http.Request, *R
 	r = utils.SetRemoteAddress(r, data.RemoteAddress)
 	data.r = r
 
-	data.cookieName = utils.DefaultCookiePrefix + hex.EncodeToString(data.cookieHostKey()) + "-state"
+	data.cookieName = state.Settings().CookiePrefix + hex.EncodeToString(data.cookieHostKey()) + "-state"
 
 	return r, &data
 }

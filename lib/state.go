@@ -92,6 +92,14 @@ func NewState(p policy.Policy, opt settings.Settings, settings policy.StateSetti
 
 	state.urlPath = state.Settings().BasePath
 
+	if state.settings.CookiePrefix == "" {
+		state.settings.CookiePrefix = utils.DefaultCookiePrefix
+	}
+	// check against a full name, as names are built as <prefix><hash>-state
+	if err = (&http.Cookie{Name: state.settings.CookiePrefix + "0-state", Value: "0"}).Valid(); err != nil {
+		return nil, fmt.Errorf("invalid cookie prefix %q: %w", state.settings.CookiePrefix, err)
+	}
+
 	// set a reasonable configuration for default http proxy if there is none
 	for _, backend := range state.Settings().Backends {
 		if proxy, ok := backend.(*httputil.ReverseProxy); ok {

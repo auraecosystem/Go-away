@@ -11,21 +11,25 @@ import (
 	"time"
 
 	"git.gammaspectra.live/git/go-away/lib/policy"
+	"git.gammaspectra.live/git/go-away/utils"
 )
 
 // testState implements only what the verify handler needs, anything else panics on the nil embedded interface
 type testState struct {
 	StateInterface
-	privateKey ed25519.PrivateKey
-	errorCode  int
+	privateKey   ed25519.PrivateKey
+	cookiePrefix string
+	errorCode    int
 }
 
 func newTestState() *testState {
 	_, privateKey, _ := ed25519.GenerateKey(nil)
-	return &testState{privateKey: privateKey}
+	return &testState{privateKey: privateKey, cookiePrefix: utils.DefaultCookiePrefix}
 }
 
-func (s *testState) Settings() policy.StateSettings                                            { return policy.StateSettings{} }
+func (s *testState) Settings() policy.StateSettings {
+	return policy.StateSettings{CookiePrefix: s.cookiePrefix}
+}
 func (s *testState) GetChallenges() Register                                                   { return Register{} }
 func (s *testState) PrivateKey() ed25519.PrivateKey                                            { return s.privateKey }
 func (s *testState) PublicKey() ed25519.PublicKey                                              { return s.privateKey.Public().(ed25519.PublicKey) }
@@ -187,5 +191,29 @@ func TestVerifyHandlerFunc(t *testing.T) {
 				t.Error("expected state cookie")
 			}
 		})
+	}
+}
+
+func TestStateCookieUsesPrefix(t *testing.T) {
+	state := newTestState()
+	state.cookiePrefix = "__x-"
+	reg := &Registration{Name: "test", Path: "/challenge/test", Duration: time.Hour, KeyHeaders: DefaultKeyHeaders}
+	verify := func(key Key, token []byte, r *http.Request) (VerifyResult, error) {
+		return VerifyResultOK, nil
+	}
+
+	r := httptest.NewRequest(http.MethodGet, reg.Path+VerifyChallengeUrlSuffix+"?"+verifyQuery("test", "x").Encode(), nil)
+	r, data := CreateRequestData(r, state)
+	data.ChallengeMap = make(TokenChallengeMap)
+
+	w := httptest.NewRecorder()
+	VerifyHandlerFunc(state, reg, verify, nil)(w, r)
+
+	cookies := w.Result().Cookies()
+	if len(cookies) != 1 {
+		t.Fatalf("got %d cookies, want 1", len(cookies))
+	}
+	if name := cookies[0].Name; !strings.HasPrefix(name, "__x-") || !strings.HasSuffix(name, "-state") {
+		t.Errorf("cookie name = %q, want __x-<hash>-state", name)
 	}
 }

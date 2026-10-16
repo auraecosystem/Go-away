@@ -102,6 +102,7 @@ func main() {
 			PrivateKeySeed:        seed,
 			ClientIpHeader:        conf.ClientIpHeader,
 			BackendIpHeader:       conf.BackendIpHeader,
+			CookiePrefix:          conf.CookiePrefix,
 			ChallengeResponseCode: conf.ChallengeHttpCode,
 		}
 
