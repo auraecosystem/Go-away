@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net"
+	"slices"
 	"strconv"
 )
 
@@ -46,8 +47,8 @@ func (bl DNSBL) Lookup(ctx context.Context, ip net.IP) (DNSBLResponse, error) {
 		// max length preallocate
 		target = make([]byte, 0, len(bl.target)+1+len(ip4)*4)
 
-		for i := len(ip4) - 1; i >= 0; i-- {
-			target = strconv.AppendUint(target, uint64(ip4[i]), 10)
+		for _, i := range slices.Backward(ip4) {
+			target = strconv.AppendUint(target, uint64(i), 10)
 			target = append(target, '.')
 		}
 	} else {
@@ -55,8 +56,8 @@ func (bl DNSBL) Lookup(ctx context.Context, ip net.IP) (DNSBLResponse, error) {
 		// max length preallocate
 		target = make([]byte, 0, len(bl.target)+1+len(ip)*4)
 
-		for i := len(ip) - 1; i >= 0; i-- {
-			target = append(target, nibbleTable[ip[i]&0xf], '.', nibbleTable[ip[i]>>4], '.')
+		for _, i := range slices.Backward(ip) {
+			target = append(target, nibbleTable[i&0xf], '.', nibbleTable[i>>4], '.')
 		}
 	}
 

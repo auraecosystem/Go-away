@@ -15,15 +15,15 @@ type stateMetrics struct {
 func newMetrics() *stateMetrics {
 	return &stateMetrics{
 		rules: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: "go-away_rule_results",
+			Name: "goaway_rule_results",
 			Help: "The number of rule hits or misses",
 		}, []string{"rule", "result"}),
 		actions: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: "go-away_action_results",
+			Name: "goaway_action_results",
 			Help: "The number of each action issued",
 		}, []string{"action"}),
 		challenges: promauto.NewCounterVec(prometheus.CounterOpts{
-			Name: "go-away_challenge_results",
+			Name: "goaway_challenge_results",
 			Help: "The number of challenges issued, passed or explicitly failed",
 		}, []string{"challenge", "action"}),
 	}

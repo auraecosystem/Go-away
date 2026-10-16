@@ -1,6 +1,8 @@
 package wasm
 
 import (
+	"maps"
+
 	"codeberg.org/meta/gzipped/v2"
 	"context"
 	"errors"
@@ -160,9 +162,7 @@ func FillJavaScriptRegistration(state challenge.StateInterface, reg *challenge.R
 			}
 
 			// set output headers
-			for k, v := range out.Headers {
-				w.Header()[k] = v
-			}
+			maps.Copy(w.Header(), out.Headers)
 			w.Header().Set("Content-Length", fmt.Sprintf("%d", len(out.Data)))
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 

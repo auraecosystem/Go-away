@@ -63,12 +63,12 @@ func main() {
 	var cache utils.Cache
 	var acmeCache string
 	if conf.CachePath != "" {
-		err := os.MkdirAll(conf.CachePath, 0755)
+		err := os.MkdirAll(conf.CachePath, 0o755)
 		if err != nil {
 			utils.Fatal(fmt.Errorf("failed to create cache directory: %w", err))
 		}
 		for _, n := range []string{"networks", "acme"} {
-			err = os.MkdirAll(path.Join(conf.CachePath, n), 0755)
+			err = os.MkdirAll(path.Join(conf.CachePath, n), 0o755)
 			if err != nil {
 				utils.Fatal(fmt.Errorf("failed to create cache sub directory %s: %w", n, err))
 			}

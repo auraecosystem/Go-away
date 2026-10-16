@@ -33,6 +33,11 @@ type Bind struct {
 	// TLSPrivateKey Alternate to TLSAcmeAutoCert
 	TLSPrivateKey string `yaml:"tls-key"`
 
+	TLSCertificates []struct {
+		Cert string `yaml:"cert"`
+		Key  string `yaml:"key"`
+	} `yaml:"tls-certificates"`
+
 	// ReadTimeout is the maximum duration for reading the entire
 	// request, including the body. A zero or negative value means
 	// there will be no timeout.
@@ -92,18 +97,30 @@ func (b *Bind) Server(backends map[string]http.Handler, acmeCachePath string) (*
 			"directory", b.TLSAcmeAutoCert,
 		)
 		tlsConfig = acmeManager.TLSConfig()
-	} else if b.TLSCertificate != "" && b.TLSPrivateKey != "" {
+	} else if b.TLSCertificate != "" && b.TLSPrivateKey != "" || len(b.TLSCertificates) > 0 {
 		tlsConfig = &tls.Config{}
-		var err error
-		tlsConfig.Certificates = make([]tls.Certificate, 1)
-		tlsConfig.Certificates[0], err = tls.LoadX509KeyPair(b.TLSCertificate, b.TLSPrivateKey)
-		if err != nil {
-			return nil, nil, err
+
+		var certs []tls.Certificate
+
+		if b.TLSCertificate != "" && b.TLSPrivateKey != "" {
+			cert, err := tls.LoadX509KeyPair(b.TLSCertificate, b.TLSPrivateKey)
+			if err != nil {
+				return nil, nil, err
+			}
+			certs = append(certs, cert)
+			slog.Warn("TLS enabled", "certificate", b.TLSCertificate)
 		}
-		slog.Warn(
-			"TLS enabled",
-			"certificate", b.TLSCertificate,
-		)
+
+		for _, pair := range b.TLSCertificates {
+			cert, err := tls.LoadX509KeyPair(pair.Cert, pair.Key)
+			if err != nil {
+				return nil, nil, err
+			}
+			certs = append(certs, cert)
+			slog.Warn("TLS enabled", "certificate", pair.Cert)
+		}
+
+		tlsConfig.Certificates = certs
 	}
 
 	var serverHandler atomic.Pointer[http.Handler]

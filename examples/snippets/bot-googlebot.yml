@@ -1,6 +1,6 @@
 networks:
   googlebot:
-    - url: https://developers.google.com/static/search/apis/ipranges/googlebot.json
+    - url: https://developers.google.com/static/crawling/ipranges/common-crawlers.json
       jq-path: '(.prefixes[] | select(has("ipv4Prefix")) | .ipv4Prefix), (.prefixes[] | select(has("ipv6Prefix")) | .ipv6Prefix)'
 
 conditions:
