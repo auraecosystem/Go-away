@@ -31,7 +31,7 @@ func FillRegistration(state challenge.StateInterface, reg *challenge.Registratio
 		if err != nil {
 			return err
 		}
-		err = yaml.Unmarshal(ymlData, &params)
+		err = yaml.UnmarshalWithOptions(ymlData, &params, yaml.Strict())
 		if err != nil {
 			return err
 		}

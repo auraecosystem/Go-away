@@ -21,7 +21,7 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
-			err = yaml.Unmarshal(ymlData, &params)
+			err = yaml.UnmarshalWithOptions(ymlData, &params, yaml.Strict())
 			if err != nil {
 				return nil, err
 			}

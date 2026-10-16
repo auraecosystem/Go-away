@@ -191,7 +191,7 @@ func loadYamlconfig(settingsFile *string, cmdSettings *Settings) *Settings {
 		utils.Fatal(fmt.Errorf("could not read settings file: %w", err))
 	}
 	cfgSettings := DefaultSettings
-	err = yaml.Unmarshal(settingsData, &cfgSettings)
+	err = yaml.UnmarshalWithOptions(settingsData, &cfgSettings, yaml.Strict())
 	if err != nil {
 		utils.Fatal(fmt.Errorf("could not parse settings file: %w", err))
 	}

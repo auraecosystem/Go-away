@@ -55,7 +55,7 @@ func FillJavaScriptRegistration(state challenge.StateInterface, reg *challenge.R
 		if err != nil {
 			return err
 		}
-		err = yaml.Unmarshal(ymlData, &params)
+		err = yaml.UnmarshalWithOptions(ymlData, &params, yaml.Strict())
 		if err != nil {
 			return err
 		}

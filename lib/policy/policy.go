@@ -31,7 +31,7 @@ func NewPolicy(r io.Reader, snippetsDirectories ...string) (*Policy, error) {
 	p.Challenges = make(map[string]Challenge)
 
 	if len(snippetsDirectories) == 0 {
-		err := yaml.NewDecoder(r).Decode(&p)
+		err := yaml.NewDecoder(r, yaml.Strict()).Decode(&p)
 		if err != nil {
 			return nil, err
 		}
@@ -54,7 +54,7 @@ func NewPolicy(r io.Reader, snippetsDirectories ...string) (*Policy, error) {
 			}
 		}
 
-		err := yaml.NewDecoder(r, yaml.ReferenceFiles(entries...)).Decode(&p)
+		err := yaml.NewDecoder(r, yaml.ReferenceFiles(entries...), yaml.Strict()).Decode(&p)
 		if err != nil {
 			return nil, err
 		}
@@ -66,7 +66,7 @@ func NewPolicy(r io.Reader, snippetsDirectories ...string) (*Policy, error) {
 			if err != nil {
 				return nil, err
 			}
-			err = yaml.NewDecoder(bytes.NewReader(entryData), yaml.ReferenceFiles(entries...)).Decode(&entryPolicy)
+			err = yaml.NewDecoder(bytes.NewReader(entryData), yaml.ReferenceFiles(entries...), yaml.Strict()).Decode(&entryPolicy)
 			if err != nil {
 				return nil, err
 			}
