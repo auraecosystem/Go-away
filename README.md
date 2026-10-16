@@ -9,17 +9,17 @@ Self-hosted abuse detection and rule enforcement against low-effort mass AI scra
 
 go-away sits in between your site and the Internet / upstream proxy.
 
-Incoming requests can be selected by [rules](#rich-rule-matching) to be [actioned](https://git.gammaspectra.live/git/go-away/wiki/Rule-Actions) or [challenged](https://git.gammaspectra.live/git/go-away/wiki/Challenges) to filter suspicious requests.
+Incoming requests can be selected by [rules](#rich-rule-matching) to be [actioned](https://git.ksol.io/karolyi/go-away/wiki/Rule-Actions) or [challenged](https://git.ksol.io/karolyi/go-away/wiki/Challenges) to filter suspicious requests.
 
 The tool is designed highly flexible so the operator can minimize impact to legit users, while surgically targeting heavy endpoints or scrapers.
 
-[Challenges](https://git.gammaspectra.live/git/go-away/wiki/Challenges) can be transparent (not shown to user, depends on backend or other logic), [non-JavaScript](#non-javascript-challenges) (challenges common browser properties), or [custom JavaScript](#custom-javascript-wasm-challenges) (from Proof of Work to fingerprinting or Captcha is supported)
+[Challenges](https://git.ksol.io/karolyi/go-away/wiki/Challenges) can be transparent (not shown to user, depends on backend or other logic), [non-JavaScript](#non-javascript-challenges) (challenges common browser properties), or [custom JavaScript](#custom-javascript-wasm-challenges) (from Proof of Work to fingerprinting or Captcha is supported)
 
 See _[Why do this?](#why-do-this)_ section for the challenges and reasoning behind this tool. 
 
 **This documentation and go-away are in active development.** See [What's left?](#what-s-left) section for a breakdown.
 
-Check this README for a general introduction. An [in-depth Wiki](https://git.gammaspectra.live/git/go-away/wiki/) is available and being improved.
+Check this README for a general introduction. An [in-depth Wiki](https://git.ksol.io/karolyi/go-away/wiki/) is available and being improved.
 
 ## Support
 
@@ -45,11 +45,11 @@ Note that issues or pull requests should be issued on the [main Forge](https://g
 
 ## Installation and Setup
 
-See the [Installation page](https://git.gammaspectra.live/git/go-away/wiki/Installation) on the Wiki for all the details.
+See the [Installation page](https://git.ksol.io/karolyi/go-away/wiki/Installation) on the Wiki for all the details.
 
 go-away can be directly run from command line, via pre-built containers, or your own built containers.
 
-Settings can be passed as command line options (see `go-away --help`), or in a config file passed with `--config`. See [examples/config.yml](examples/config.yml) for all config file settings. Option names differ between the two, e.g. `--cache` is `cache-path:` in the config file. When a config file is used, all other command line options are ignored, except for `--check` and `--jwt-private-key-seed`.
+Settings can be passed as command line options (see `go-away --help`), or in a config file passed with `--config`. See [examples/config.yml](examples/config.yml) for all config file settings. Option names differ between the two, e.g. `--cache` is `cache-path:` in the config file. When a config file is used, all other command line options are ignored, except for `--check` and `--jwt-private-key-seed`. See the [Configuration page](https://git.ksol.io/karolyi/go-away/wiki/Configuration) on the Wiki.
 
 
 ## Features
@@ -60,7 +60,7 @@ Settings can be passed as command line options (see `go-away --help`), or in a c
 
 Templates can be defined in the Policy to allow reuse of such conditions on rule matching. Challenges can also be gated behind conditions.
 
-See the [CEL Language Definition](https://github.com/google/cel-spec/blob/master/doc/langdef.md) for the syntax.
+See the [CEL Language Definition](https://github.com/google/cel-spec/blob/master/doc/langdef.md) for the syntax, and the [Conditions page](https://git.ksol.io/karolyi/go-away/wiki/Conditions) on the Wiki for named conditions, snippets and nested rules.
 
 Rules and conditions are served with this environment:
 
@@ -68,8 +68,8 @@ Rules and conditions are served with this environment:
 remoteAddress (net.IP) - Connecting client remote address from headers or properties
   remoteAddress.network(networkName string) bool - Check whether a given IP is listed on the underlying defined network
   remoteAddress.network(networkCIDR string) bool - Check whether a given IP is listed on the CIDR
-  remoteAddress.asn() int - ASN of the IP, requires a MaxMind ASN database, see ASN-based matching
-  remoteAddress.country() string - ISO country code of the IP, requires a MaxMind country database, see Country-based matching
+  remoteAddress.asn() int - ASN of the IP, requires a MaxMind ASN database, see Networks and ASNs on the Wiki
+  remoteAddress.country() string - ISO country code of the IP, requires a MaxMind country database, see Networks and ASNs on the Wiki
 host (string) - HTTP Host
 httpVersion (string) - HTTP version (eg. "HTTP/1.1")
 method (string) - HTTP Method/Verb
@@ -111,13 +111,15 @@ Some templates support themes. Specify that either via the [config.yml](examples
 
 Most templates support overriding the logo. Specify that either via the [config.yml](examples/config.yml) file, or via `challenge-template-logo` cmdline argument.
 
+See the [Templates page](https://git.ksol.io/karolyi/go-away/wiki/Templates) on the Wiki for template variables, overrides and strings.
+
 **Feel free to make any changes to existing templates or bring your own, alter any logos or styling, it's yours to adapt!**
 
 ### Advanced actions
 
 In addition to the common PASS / CHALLENGE / DENY / GONE rules, go-away offers more actions, plus any more extensible via code.
 
-See the [Rule Actions page](https://git.gammaspectra.live/git/go-away/wiki/Rule-Actions) on the Wiki.
+See the [Rule Actions page](https://git.ksol.io/karolyi/go-away/wiki/Rule-Actions) on the Wiki.
 
 ### Multiple challenge matching
 
@@ -145,7 +147,7 @@ Several challenges that do not require JavaScript are offered, some targeting th
 
 These can be used for light checking of requests that eliminate most of the low effort scraping.
 
-See [Transparent challenges](https://git.gammaspectra.live/git/go-away/wiki/Challenges#transparent) and [Non-JavaScript challenges](https://git.gammaspectra.live/git/go-away/wiki/Challenges#non-javascript) on the Wiki for more information.
+See [Transparent challenges](https://git.ksol.io/karolyi/go-away/wiki/Challenges#transparent) and [Non-JavaScript challenges](https://git.ksol.io/karolyi/go-away/wiki/Challenges#non-javascript) on the Wiki for more information.
 
 ### Custom JavaScript / WASM challenges
 
@@ -153,27 +155,13 @@ A WASM interface for server-side proof generation and checking is offered. We pr
 
 You can implement Captchas or other browser fingerprinting tests within this interface.
 
-See [Custom JavaScript challenges](https://git.gammaspectra.live/git/go-away/wiki/Challenges#custom-javascript) on the Wiki for more information.
+See [Custom JavaScript challenges](https://git.ksol.io/karolyi/go-away/wiki/Challenges#javascript) on the Wiki for more information.
 
 ### hCaptcha challenge
 
-The `hcaptcha` runtime shows an [hCaptcha](https://www.hcaptcha.com/) widget on the challenge page. The solved captcha is POSTed back to go-away, checked once against the hCaptcha `siteverify` API, and a regular go-away token is issued for the challenge `duration`.
+The `hcaptcha` runtime shows an [hCaptcha](https://www.hcaptcha.com/) widget on the challenge page. The solved captcha is checked once against the hCaptcha `siteverify` API, and a regular go-away token is issued for the challenge `duration`.
 
-```yaml
-challenges:
-  hcaptcha:
-    runtime: hcaptcha
-    parameters:
-      site-key: "your-site-key"
-      # or secret: "0x..." inline
-      secret-file: /run/secrets/hcaptcha-secret
-      # optional
-      # timeout: 10s
-      # script-url: https://js.hcaptcha.com/1/api.js
-      # siteverify-url: https://api.hcaptcha.com/siteverify
-```
-
-This challenge requires JavaScript, and loads third-party scripts from hCaptcha on the challenge page.
+See [hcaptcha](https://git.ksol.io/karolyi/go-away/wiki/Challenges#hcaptcha) on the Wiki for its parameters.
 
 ### Upstream PROXY support
 
@@ -203,178 +191,18 @@ Some specific search spiders do follow _robots.txt_ and are well behaved. Howeve
 
 The samples provide example network range fetching and rules for Googlebot / Bingbot / DuckDuckBot / Kagibot / Qwantbot / Yandexbot.
 
-Network ranges can be loaded via fetched JSON / TXT / HTML pages, or via lists. You can filter these using _jq_ or a regex.
-
-Example for _jq_:
-```yaml
-  aws-cloud:
-    - url: https://ip-ranges.amazonaws.com/ip-ranges.json
-      jq-path: '(.prefixes[] | select(has("ip_prefix")) | .ip_prefix), (.prefixes[] | select(has("ipv6_prefix")) | .ipv6_prefix)'
-```
-
-Example for _regex_:
-```yaml
-  cloudflare:
-    - url: https://www.cloudflare.com/ips-v4
-      regex: "(?P<prefix>[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+/[0-9]+)"
-    - url: https://www.cloudflare.com/ips-v6
-      regex: "(?P<prefix>[0-9a-f:]+::/[0-9]+)"
-```
-
-A regex only picks out what it matches, everything else in the content is ignored. For plain text lists, anchor it to the start of the line with `(?m)^[ \t]*`, so commented out entries like `# 10.0.0.0/8` or `// 10.0.0.0/8` are not matched as well:
-
-```yaml
-  internal:
-    - file: /etc/go-away/internal-networks.txt
-      regex: '(?m)^[ \t]*(?P<prefix>[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/[0-9]+)'
-```
-
-Lists are strict: if any matched value is not a valid prefix (or ASN, for ASN lists), the whole list is rejected with a loud error naming the offending line (or jq-path output), instead of loading part of it.
-
-#### Keeping lists up to date
-
-By default, url lists are fetched once when the policy is loaded, and are kept until go-away is restarted or the policy is reloaded. Set `refresh` to fetch a url again periodically (minimum `5m`):
+Network ranges can be loaded via fetched JSON / TXT / HTML pages, files, or static lists. You can filter these using _jq_ or a regex, and keep them up to date with periodic refreshes:
 
 ```yaml
   googlebot:
     - url: https://developers.google.com/static/search/apis/ipranges/googlebot.json
       jq-path: '(.prefixes[] | select(has("ipv4Prefix")) | .ipv4Prefix), (.prefixes[] | select(has("ipv6Prefix")) | .ipv6Prefix)'
       refresh: 6h
-      refresh-jitter: 30m
 ```
 
-Each refresh is randomly moved by up to ± `refresh-jitter`, so many instances started at the same time do not all hit the list host at once. It defaults to 10% of `refresh`, can be at most half of it, and `refresh-jitter: 0s` disables it.
+Clients can also be matched by the ASN that announces their IP (via RADb or a local MaxMind GeoLite2-ASN database), and by country with `remoteAddress.country()` (MaxMind GeoLite2-Country database).
 
-`file` lists do not take `refresh`: they are checked for changes every minute and reloaded when modified, so they can be updated in place.
-
-When a refresh or reload fails (the host is down, the content does not parse, ...), the previously loaded entries are kept and an error is logged. A list that fails to load at all is logged as a loud error and matches nothing.
-
-Fetched url lists are also stored in the cache directory (`--cache`, or `cache-path:` in the config file), and rewritten after every successful refresh. On startup, a cached copy is used without fetching while it is younger than 24 hours (or than `refresh`, if shorter). An older copy is only used when fetching fails, so a restart while the list host is down still starts with the last known entries.
-
-Downloads time out after one minute, follow up to 5 redirects (never from `https` to `http`) and are limited to 32 MiB.
-
-### ASN-based matching
-
-Instead of (or in addition to) static network ranges, clients can be matched by the ASN (Autonomous System Number) that announces their IP. Define named ASN groups under `asns` in the policy:
-
-```yaml
-asns:
-  huawei-cloud:
-  - asn: 136907
-  cloudflare:
-  - asn: 13335
-    lookup_method: maxmind
-```
-
-These groups are used the same way as `networks` entries, e.g. `remoteAddress.network("cloudflare")` or the deprecated `inNetwork("cloudflare", remoteAddress)`.
-
-Each entry is either a single `asn`, with an optional `comment`, or a list of ASNs loaded from a `url` or `file`:
-
-```yaml
-asns:
-  datacenters:
-    - url: https://raw.githubusercontent.com/X4BNet/lists_vpn/refs/heads/main/input/datacenter/ASN.txt
-      regex: '(?im)^[ \t]*(?:AS)?(?P<asn>[0-9]+)[ \t]*(?:#[ \t]*(?P<comment>[^\r\n]*))?'
-      refresh: 12h
-      lookup_method: maxmind
-    - file: /etc/go-away/extra-asns.json
-      jq-path: '.[] | {asn: .number, comment: .name}'
-      lookup_method: maxmind
-    - asn: 136907
-      comment: Huawei Cloud
-      lookup_method: maxmind
-```
-
-Lists need exactly one of:
-
-- `regex`: with an `asn` named match, and optionally a `comment` one. ASNs can be written as `13335` or `AS13335`. The example above parses lines like `AS45090 # Tencent cloud`, and being anchored to the start of the line, it skips commented out lines.
-- `jq-path`: for JSON, outputting ASNs as numbers, `"AS13335"` style strings, or `{"asn": ..., "comment": ...}` objects.
-
-As with network lists, a single invalid ASN rejects the whole list, with an error naming its line. Comments are only used in logs: with debug logging, a match logs the ASN and its comment.
-
-Lists are only supported with `lookup_method: maxmind`, as resolving hundreds of ASNs via RADb would flood it with queries. They are kept up to date the same way as network lists, see [Keeping lists up to date](#keeping-lists-up-to-date).
-
-Two lookup methods are available per entry:
-
-- **RADb (default)**: pre-fetches the ASN's announced prefixes from RADb at startup/reload and matches against that static prefix list. Does not require a MaxMind database, but the prefix list is only refreshed on reload and depends on RADb availability.
-- **MaxMind (`lookup_method: maxmind`)**: performs a per-request ASN lookup against a local [MaxMind GeoLite2-ASN](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data) `.mmdb` database. Requires passing `--maxmind-asn-database /path/to/GeoLite2-ASN.mmdb` (or `maxmind-asn-database:` in the config file). The database file is watched and reloaded automatically on change, so it can be updated in place (e.g. by a periodic `geoipupdate` job) without restarting go-away.
-
-A single ASN group can mix both lookup methods; a request matches if it hits either the RADb prefix list or a MaxMind entry's ASN (RADb checked first, per-request). If any entry in any group uses `lookup_method: maxmind`, a MaxMind ASN database must be configured — go-away fails to start otherwise, it does not silently skip those entries.
-
-The CEL condition function `remoteAddress.asn() == 13335` is also available directly and always uses the MaxMind ASN database.
-
-The old `asn:` field under a `networks` entry still works (matching this new default RADb behavior) but is deprecated in favor of the `asns` section above.
-
-### Country-based matching
-
-Clients can be matched by the country of their IP with the CEL condition function `remoteAddress.country()`. It returns the uppercase [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) code:
-
-```yaml
-rules:
-  - name: challenge-countries
-    conditions:
-      - 'remoteAddress.country() in ["CN", "RU"]'
-    action: challenge
-    settings:
-      challenges: [js-refresh]
-```
-
-This needs a local [MaxMind GeoLite2-Country or GeoLite2-City](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data) `.mmdb` database, passed with `--maxmind-country-database /path/to/GeoLite2-Country.mmdb` (or `maxmind-country-database:` in the config file). It is separate from the ASN database, as GeoLite2-ASN has no country data. Like the ASN database, it is watched and reloaded automatically on change. go-away fails to start if a condition uses `country()` and no country database is configured.
-
-The country where the IP is located is returned, falling back to the country the IP block is registered to. When the database has no country for the IP, an empty string is returned.
-
-Take care with negated conditions such as `remoteAddress.country() != "DE"`. Localhost, private networks (`10.0.0.0/8`, `192.168.0.0/16`, `fc00::/7`, ...) and CGNAT addresses have no country, so they match too. Internal monitoring, health checks and other tools on your own network then get challenged, and most of them can't solve one. If go-away runs behind a reverse proxy without `client-ip-header` set, every request comes from the proxy's private address and every client is challenged.
-
-Let your own networks through with a `pass` rule placed before the country rule. The `localhost` and `private` networks are defined in [examples/snippets/networks-private.yml](examples/snippets/networks-private.yml):
-
-```yaml
-rules:
-  - name: allow-private-networks
-    conditions:
-      - 'remoteAddress.network("localhost")'
-      - 'remoteAddress.network("private")'
-    action: pass
-
-  - name: challenge-foreign
-    conditions:
-      - 'remoteAddress.country() != "DE"'
-    action: challenge
-    settings:
-      challenges: [js-refresh]
-```
-
-Or exclude unknown countries in the condition itself:
-
-```yaml
-    conditions:
-      - 'remoteAddress.country() != "" && remoteAddress.country() != "DE"'
-```
-
-The `pass` rule is usually the better choice, as it also covers your network, ASN and other rules. Positive matches such as `remoteAddress.country() in ["CN", "RU"]` never match an empty string, so they don't need either.
-
-### Allowing networks and ASNs
-
-Network ranges and ASN groups can also be used to let trusted clients through. Rules are evaluated in order, so place a rule with the `pass` action before any rule that would challenge or drop them:
-
-```yaml
-networks:
-  office:
-    - prefixes: ["203.0.113.0/24", "2001:db8::/32"]
-
-asns:
-  trusted-isp:
-    - asn: 3320
-      comment: Deutsche Telekom
-      lookup_method: maxmind
-
-rules:
-  - name: allow-trusted
-    conditions:
-      - 'remoteAddress.network("office")'
-      - 'remoteAddress.network("trusted-isp")'
-    action: pass
-```
-
+See [Networks and ASNs](https://git.ksol.io/karolyi/go-away/wiki/Networks-and-ASNs) on the Wiki for list formats, refreshing and caching, ASN groups, MaxMind databases and country matching.
 
 ### Multiple backend support
 
