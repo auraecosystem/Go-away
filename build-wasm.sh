@@ -8,6 +8,20 @@ cd "$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 
 mkdir -p .bin/ 2>/dev/null
 
+# No TinyGo release is published for FreeBSD, so use the one installed on the system
+if [[ "$(uname -s)" == FreeBSD ]]; then
+  command -v tinygo >/dev/null || {
+    echo "tinygo not found in PATH, install TinyGo ${VERSION} first" >&2
+    exit 1
+  }
+  installed="$(tinygo version | awk '{print $3}')"
+  if [[ "$installed" != "$VERSION" ]]; then
+    echo "warning: using tinygo ${installed}, expected ${VERSION}; runtime.wasm may differ from the committed one" >&2
+  fi
+  go generate ./...
+  exit 0
+fi
+
 # Setup tinygo first
 if [[ ! -d .bin/tinygo ]]; then
   pushd .bin
@@ -32,7 +46,7 @@ if [[ ! -d .bin/tinygo ]]; then
   case "$(uname -m)" in
   x86_64 | amd64) arch=amd64 ;;
   aarch64 | arm64) arch=arm64 ;;
-  armv6l | armv7l | armv8l) arch=armhf ;;
+  armv6l | armv7l | armv8l) arch=arm ;;
   *)
     echo "Unsupported arch: $(uname -m)" >&2
     exit 1
