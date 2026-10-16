@@ -57,7 +57,11 @@ const VerifyChallengeUrlSuffix = "/verify-challenge"
 
 func GetVerifyInformation(r *http.Request, reg *Registration) (requestId RequestId, redirect, token string, err error) {
 
-	q := r.URL.Query()
+	// r.Form holds the query arguments, plus POST body values which take precedence
+	if err = r.ParseForm(); err != nil {
+		return RequestId{}, "", "", err
+	}
+	q := r.Form
 
 	if q.Get(QueryArgChallenge) != reg.Name {
 		return RequestId{}, "", "", fmt.Errorf("unexpected challenge: got \"%s\"", q.Get(QueryArgChallenge))
@@ -154,6 +158,11 @@ func VerifyHandlerChallengeResponseFunc(state StateInterface, data *RequestData,
 		return
 	}
 	data.ResponseHeaders(w)
+	if r.Method == http.MethodPost {
+		// 307 would make the browser repeat the POST against the redirect target
+		http.Redirect(w, r, redirect, http.StatusSeeOther)
+		return
+	}
 	http.Redirect(w, r, redirect, http.StatusTemporaryRedirect)
 }
 
@@ -187,7 +196,12 @@ func VerifyHandlerFunc(state StateInterface, reg *Registration, verify VerifyFun
 				return nil
 			}
 
-			data.IssueChallengeToken(reg, key, []byte(token), expiration, true)
+			// the stored result is only read back by reg.Verify spot checks
+			var result []byte
+			if reg.Verify != nil {
+				result = []byte(token)
+			}
+			data.IssueChallengeToken(reg, key, result, expiration, true)
 			data.ChallengeVerify[reg.id] = verifyResult
 			state.ChallengePassed(r, reg, redirect, nil)
 

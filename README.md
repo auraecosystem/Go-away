@@ -155,6 +155,26 @@ You can implement Captchas or other browser fingerprinting tests within this int
 
 See [Custom JavaScript challenges](https://git.gammaspectra.live/git/go-away/wiki/Challenges#custom-javascript) on the Wiki for more information.
 
+### hCaptcha challenge
+
+The `hcaptcha` runtime shows an [hCaptcha](https://www.hcaptcha.com/) widget on the challenge page. The solved captcha is POSTed back to go-away, checked once against the hCaptcha `siteverify` API, and a regular go-away token is issued for the challenge `duration`.
+
+```yaml
+challenges:
+  hcaptcha:
+    runtime: hcaptcha
+    parameters:
+      site-key: "your-site-key"
+      # or secret: "0x..." inline
+      secret-file: /run/secrets/hcaptcha-secret
+      # optional
+      # timeout: 10s
+      # script-url: https://js.hcaptcha.com/1/api.js
+      # siteverify-url: https://api.hcaptcha.com/siteverify
+```
+
+This challenge requires JavaScript, and loads third-party scripts from hCaptcha on the challenge page.
+
 ### Upstream PROXY support
 
 Support for [HAProxy PROXY protocol](https://github.com/haproxy/haproxy/blob/master/doc/proxy-protocol.txt) can be enabled.
