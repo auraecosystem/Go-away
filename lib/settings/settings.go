@@ -181,7 +181,7 @@ func parseCmdbackends(settings *Settings, backends MultiVar) {
 	}
 }
 
-// the config file settings have precedence over cmdline settings
+// loadYamlconfig loads the config file on top of the defaults, replacing all cmdline settings
 func loadYamlconfig(settingsFile *string, cmdSettings *Settings) *Settings {
 	settingsData, err := os.ReadFile(*settingsFile)
 	if err != nil {

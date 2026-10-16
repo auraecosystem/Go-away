@@ -1,5 +1,5 @@
-# Configuration file
-# Parameters that exist both on config and cmdline will have cmdline as preference
+# Configuration file, passed with --config
+# When it is used, all other command line options are ignored, except for --check and --jwt-private-key-seed
 
 bind:
   #address: ":8080"

@@ -49,6 +49,8 @@ See the [Installation page](https://git.gammaspectra.live/git/go-away/wiki/Insta
 
 go-away can be directly run from command line, via pre-built containers, or your own built containers.
 
+Settings can be passed as command line options (see `go-away --help`), or in a config file passed with `--config`. See [examples/config.yml](examples/config.yml) for all config file settings. Option names differ between the two, e.g. `--cache` is `cache-path:` in the config file. When a config file is used, all other command line options are ignored, except for `--check` and `--jwt-private-key-seed`.
+
 
 ## Features
 
@@ -87,7 +89,7 @@ You can modify the path where challenges are served and package name, if you don
 
 No source code editing or forking necessary!
 
-Simply pass a new absolute path via the cmdline _path_ argument, like so: `--path "/.goaway_example"`
+Simply pass a new absolute path via the cmdline _path_ argument, like so: `--path "/.goaway_example"`, or `base-path: "/.goaway_example"` in the config file.
 
 ### Page template and customization support
 
@@ -224,7 +226,7 @@ Each refresh is randomly moved by up to ± `refresh-jitter`, so many instances s
 
 When a refresh or reload fails (the host is down, the content does not parse, ...), the previously loaded entries are kept and an error is logged. A list that fails to load at all is logged as a loud error and matches nothing.
 
-Fetched url lists are also stored in the cache directory (`--cache`), and rewritten after every successful refresh. On startup, a cached copy is used without fetching while it is younger than 24 hours (or than `refresh`, if shorter). An older copy is only used when fetching fails, so a restart while the list host is down still starts with the last known entries.
+Fetched url lists are also stored in the cache directory (`--cache`, or `cache-path:` in the config file), and rewritten after every successful refresh. On startup, a cached copy is used without fetching while it is younger than 24 hours (or than `refresh`, if shorter). An older copy is only used when fetching fails, so a restart while the list host is down still starts with the last known entries.
 
 Downloads time out after one minute, follow up to 5 redirects (never from `https` to `http`) and are limited to 32 MiB.
 
@@ -345,6 +347,8 @@ Important notes:
 ### Snippets
 
 You can define snippets to be included. YAML anchors/aliases are supported.
+
+Pass a snippets folder with `--policy-snippets` (can be given multiple times), or list them under `policy-snippets:` in the config file.
 
 See [examples/snippets/](examples/snippets/) for some defaults including indexer bots, challenges and other general matches.
 
