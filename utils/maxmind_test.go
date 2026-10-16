@@ -10,7 +10,7 @@ import (
 	"github.com/maxmind/mmdbwriter/mmdbtype"
 )
 
-// createTestMMDB writes a minimal GeoLite2-ASN database to a temp file and
+// createTestASNMMDB writes a minimal GeoLite2-ASN database to a temp file and
 // returns its path. The caller's test cleanup removes the file.
 //
 // Records inserted:
@@ -18,7 +18,7 @@ import (
 //	1.0.0.0/24 → ASN 13335
 //	2.0.0.0/24 → ASN 13335
 //	3.0.0.0/24 → ASN 15169
-func createTestMMDB(t *testing.T) string {
+func createTestASNMMDB(t *testing.T) string {
 	t.Helper()
 
 	writer, err := mmdbwriter.New(mmdbwriter.Options{
@@ -76,7 +76,7 @@ func TestNewMaxMindDB(t *testing.T) {
 	})
 
 	t.Run("valid path", func(t *testing.T) {
-		path := createTestMMDB(t)
+		path := createTestASNMMDB(t)
 		db, err := NewMaxMindDB(path)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -89,7 +89,7 @@ func TestNewMaxMindDB(t *testing.T) {
 }
 
 func TestGetASN(t *testing.T) {
-	path := createTestMMDB(t)
+	path := createTestASNMMDB(t)
 	db, err := NewMaxMindDB(path)
 	if err != nil {
 		t.Fatalf("setup: %v", err)
@@ -132,4 +132,93 @@ func TestGetASN(t *testing.T) {
 			t.Fatal("expected error for unregistered IP, got nil")
 		}
 	})
+}
+
+// createTestCountryMMDB writes a minimal GeoLite2-Country database to a temp
+// directory and returns its path.
+//
+// Records inserted:
+//
+//	1.0.0.0/24 → country HU, registered country DE
+//	2.0.0.0/24 → registered country US only
+//	3.0.0.0/24 → no country data
+func createTestCountryMMDB(t *testing.T) string {
+	t.Helper()
+
+	writer, err := mmdbwriter.New(mmdbwriter.Options{
+		DatabaseType:        "GeoLite2-Country",
+		DisableIPv4Aliasing: true,
+	})
+	if err != nil {
+		t.Fatalf("failed to create mmdb writer: %v", err)
+	}
+
+	isoCode := func(code string) mmdbtype.Map {
+		return mmdbtype.Map{mmdbtype.String("iso_code"): mmdbtype.String(code)}
+	}
+	entries := []struct {
+		cidr   string
+		record mmdbtype.Map
+	}{
+		{"1.0.0.0/24", mmdbtype.Map{
+			mmdbtype.String("country"):            isoCode("HU"),
+			mmdbtype.String("registered_country"): isoCode("DE"),
+		}},
+		{"2.0.0.0/24", mmdbtype.Map{
+			mmdbtype.String("registered_country"): isoCode("US"),
+		}},
+		{"3.0.0.0/24", mmdbtype.Map{}},
+	}
+	for _, e := range entries {
+		_, network, err := net.ParseCIDR(e.cidr)
+		if err != nil {
+			t.Fatalf("failed to parse CIDR %s: %v", e.cidr, err)
+		}
+		if err := writer.Insert(network, e.record); err != nil {
+			t.Fatalf("failed to insert %s: %v", e.cidr, err)
+		}
+	}
+
+	path := t.TempDir() + "/country.mmdb"
+	f, err := os.Create(path)
+	if err != nil {
+		t.Fatalf("failed to create mmdb file: %v", err)
+	}
+	if _, err := writer.WriteTo(f); err != nil {
+		t.Fatalf("failed to write mmdb: %v", err)
+	}
+	f.Close()
+
+	return path
+}
+
+func TestGetCountry(t *testing.T) {
+	db, err := NewMaxMindDB(createTestCountryMMDB(t))
+	if err != nil {
+		t.Fatalf("setup: %v", err)
+	}
+	t.Cleanup(db.Close)
+
+	tests := []struct {
+		name string
+		ip   string
+		want string
+	}{
+		{"location country preferred over registered country", "1.0.0.1", "HU"},
+		{"registered country used when location is unknown", "2.0.0.1", "US"},
+		{"IP without country data", "3.0.0.1", ""},
+		{"IP not in database", "4.0.0.1", ""},
+		{"IPv6 not in database", "2001:db8::1", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			country, err := db.GetCountry(net.ParseIP(tt.ip))
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if country != tt.want {
+				t.Fatalf("expected country %q, got %q", tt.want, country)
+			}
+		})
+	}
 }

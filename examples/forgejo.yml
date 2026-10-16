@@ -8,7 +8,7 @@ networks:
   # Networks will get included from snippets
 
 # ASN groups: default pre-fetches prefixes via RADb at startup; use lookup_method: maxmind
-# for a per-request MaxMind lookup instead (requires --maxmind-database /path/to/GeoLite2-ASN.mmdb).
+# for a per-request MaxMind lookup instead (requires --maxmind-asn-database /path/to/GeoLite2-ASN.mmdb).
 asns:
   huawei-cloud:
     - asn: 136907

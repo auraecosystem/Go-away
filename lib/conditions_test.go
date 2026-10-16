@@ -11,6 +11,7 @@ import (
 	http_cel "codeberg.org/gone/http-cel"
 	"git.gammaspectra.live/git/go-away/utils"
 	"github.com/google/cel-go/common/types"
+	"github.com/google/cel-go/common/types/ref"
 	"github.com/maxmind/mmdbwriter"
 	"github.com/maxmind/mmdbwriter/mmdbtype"
 )
@@ -26,7 +27,7 @@ func captureDebugLogs(t *testing.T) *bytes.Buffer {
 	return &buf
 }
 
-func createTestMMDB(t *testing.T) *utils.MaxMindDB {
+func createTestASNMMDB(t *testing.T) *utils.MaxMindDB {
 	t.Helper()
 
 	writer, err := mmdbwriter.New(mmdbwriter.Options{
@@ -82,8 +83,8 @@ func createTestMMDB(t *testing.T) *utils.MaxMindDB {
 func newTestState(t *testing.T, mmdb *utils.MaxMindDB) *State {
 	t.Helper()
 	state := &State{
-		maxMindDB: mmdb,
-		networks:  make(map[string]func() networkMatcher),
+		maxMindASNDB: mmdb,
+		networks:     make(map[string]func() networkMatcher),
 	}
 	if err := state.initConditions(); err != nil {
 		t.Fatalf("initConditions: %v", err)
@@ -92,7 +93,7 @@ func newTestState(t *testing.T, mmdb *utils.MaxMindDB) *State {
 }
 
 func TestAsnCELFunction(t *testing.T) {
-	mmdb := createTestMMDB(t)
+	mmdb := createTestASNMMDB(t)
 	state := newTestState(t, mmdb)
 
 	t.Run("compiles successfully", func(t *testing.T) {
@@ -136,17 +137,17 @@ func TestAsnCELFunction(t *testing.T) {
 		}
 	})
 
-	t.Run("fails to register condition when maxMind not configured", func(t *testing.T) {
+	t.Run("fails to register condition when ASN database not configured", func(t *testing.T) {
 		stateNoMM := newTestState(t, nil)
 		_, err := stateNoMM.RegisterCondition(http_cel.OperatorOr, "remoteAddress.asn() == 13335")
 		if err == nil {
-			t.Fatal("expected error registering condition when maxMind not configured, got nil")
+			t.Fatal("expected error registering condition when ASN database not configured, got nil")
 		}
 	})
 }
 
 func TestAsnCELFunctionLogging(t *testing.T) {
-	mmdb := createTestMMDB(t)
+	mmdb := createTestASNMMDB(t)
 	state := newTestState(t, mmdb)
 
 	prog, err := state.RegisterCondition(http_cel.OperatorOr, "remoteAddress.asn() == 13335")
@@ -184,6 +185,120 @@ func TestAsnCELFunctionLogging(t *testing.T) {
 		out := buf.String()
 		if !strings.Contains(out, "maxmind ASN lookup failed") {
 			t.Fatalf("expected asn lookup failure debug log, got: %s", out)
+		}
+	})
+}
+
+func createTestCountryMMDB(t *testing.T) *utils.MaxMindDB {
+	t.Helper()
+
+	writer, err := mmdbwriter.New(mmdbwriter.Options{
+		DatabaseType:        "GeoLite2-Country",
+		DisableIPv4Aliasing: true,
+	})
+	if err != nil {
+		t.Fatalf("failed to create mmdb writer: %v", err)
+	}
+
+	isoCode := func(code string) mmdbtype.Map {
+		return mmdbtype.Map{mmdbtype.String("iso_code"): mmdbtype.String(code)}
+	}
+	entries := []struct {
+		cidr   string
+		record mmdbtype.Map
+	}{
+		{"1.0.0.0/24", mmdbtype.Map{
+			mmdbtype.String("country"):            isoCode("HU"),
+			mmdbtype.String("registered_country"): isoCode("DE"),
+		}},
+		{"2.0.0.0/24", mmdbtype.Map{
+			mmdbtype.String("registered_country"): isoCode("US"),
+		}},
+		{"3.0.0.0/24", mmdbtype.Map{}},
+	}
+	for _, e := range entries {
+		_, network, err := net.ParseCIDR(e.cidr)
+		if err != nil {
+			t.Fatalf("failed to parse CIDR %s: %v", e.cidr, err)
+		}
+		if err := writer.Insert(network, e.record); err != nil {
+			t.Fatalf("failed to insert %s: %v", e.cidr, err)
+		}
+	}
+
+	path := t.TempDir() + "/country.mmdb"
+	f, err := os.Create(path)
+	if err != nil {
+		t.Fatalf("failed to create mmdb file: %v", err)
+	}
+	if _, err := writer.WriteTo(f); err != nil {
+		t.Fatalf("failed to write mmdb: %v", err)
+	}
+	f.Close()
+
+	db, err := utils.NewMaxMindDB(path)
+	if err != nil {
+		t.Fatalf("failed to open test mmdb: %v", err)
+	}
+	t.Cleanup(db.Close)
+	return db
+}
+
+func TestCountryCELFunction(t *testing.T) {
+	state := newTestState(t, nil)
+	state.maxMindCountryDB = createTestCountryMMDB(t)
+
+	prog, err := state.RegisterCondition(http_cel.OperatorOr, `remoteAddress.country() == "HU"`)
+	if err != nil {
+		t.Fatalf("failed to register condition: %v", err)
+	}
+
+	tests := []struct {
+		name string
+		ip   net.IP
+		want ref.Val
+	}{
+		{"location country matches", net.IP{1, 0, 0, 1}, types.True},
+		{"registered country fallback does not match", net.IP{2, 0, 0, 1}, types.False},
+		{"ip without country", net.IP{3, 0, 0, 1}, types.False},
+		{"ip not in database", net.IP{4, 0, 0, 1}, types.False},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			out, _, err := prog.Eval(map[string]any{
+				"remoteAddress": tt.ip,
+				"fp":            map[string]string{},
+			})
+			if err != nil {
+				t.Fatalf("eval error: %v", err)
+			}
+			if out.Equal(tt.want) != types.True {
+				t.Fatalf("expected %v, got %v", tt.want, out)
+			}
+		})
+	}
+
+	t.Run("returns registered country when location is unknown", func(t *testing.T) {
+		prog, err := state.RegisterCondition(http_cel.OperatorOr, `remoteAddress.country() == "US"`)
+		if err != nil {
+			t.Fatalf("failed to register condition: %v", err)
+		}
+		out, _, err := prog.Eval(map[string]any{
+			"remoteAddress": net.IP{2, 0, 0, 1},
+			"fp":            map[string]string{},
+		})
+		if err != nil {
+			t.Fatalf("eval error: %v", err)
+		}
+		if out.Equal(types.True) != types.True {
+			t.Fatalf("expected true, got %v", out)
+		}
+	})
+
+	t.Run("fails to register condition when country database not configured", func(t *testing.T) {
+		_, err := newTestState(t, nil).RegisterCondition(http_cel.OperatorOr, `remoteAddress.country() == "HU"`)
+		if err == nil || !strings.Contains(err.Error(), "country database") {
+			t.Fatalf("expected missing country database error, got %v", err)
 		}
 	})
 }

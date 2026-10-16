@@ -68,6 +68,8 @@ Rules and conditions are served with this environment:
 remoteAddress (net.IP) - Connecting client remote address from headers or properties
   remoteAddress.network(networkName string) bool - Check whether a given IP is listed on the underlying defined network
   remoteAddress.network(networkCIDR string) bool - Check whether a given IP is listed on the CIDR
+  remoteAddress.asn() int - ASN of the IP, requires a MaxMind ASN database, see ASN-based matching
+  remoteAddress.country() string - ISO country code of the IP, requires a MaxMind country database, see Country-based matching
 host (string) - HTTP Host
 httpVersion (string) - HTTP version (eg. "HTTP/1.1")
 method (string) - HTTP Method/Verb
@@ -275,13 +277,60 @@ Lists are only supported with `lookup_method: maxmind`, as resolving hundreds of
 Two lookup methods are available per entry:
 
 - **RADb (default)**: pre-fetches the ASN's announced prefixes from RADb at startup/reload and matches against that static prefix list. Does not require a MaxMind database, but the prefix list is only refreshed on reload and depends on RADb availability.
-- **MaxMind (`lookup_method: maxmind`)**: performs a per-request ASN lookup against a local [MaxMind GeoLite2-ASN](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data) `.mmdb` database. Requires passing `--maxmind-database /path/to/GeoLite2-ASN.mmdb` (or `maxmind-database:` in the config file). The database file is watched and reloaded automatically on change, so it can be updated in place (e.g. by a periodic `geoipupdate` job) without restarting go-away.
+- **MaxMind (`lookup_method: maxmind`)**: performs a per-request ASN lookup against a local [MaxMind GeoLite2-ASN](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data) `.mmdb` database. Requires passing `--maxmind-asn-database /path/to/GeoLite2-ASN.mmdb` (or `maxmind-asn-database:` in the config file). The database file is watched and reloaded automatically on change, so it can be updated in place (e.g. by a periodic `geoipupdate` job) without restarting go-away.
 
-A single ASN group can mix both lookup methods; a request matches if it hits either the RADb prefix list or a MaxMind entry's ASN (RADb checked first, per-request). If any entry in any group uses `lookup_method: maxmind`, a MaxMind database must be configured — go-away fails to start otherwise, it does not silently skip those entries.
+A single ASN group can mix both lookup methods; a request matches if it hits either the RADb prefix list or a MaxMind entry's ASN (RADb checked first, per-request). If any entry in any group uses `lookup_method: maxmind`, a MaxMind ASN database must be configured — go-away fails to start otherwise, it does not silently skip those entries.
 
-The CEL condition function `remoteAddress.asn() == 13335` is also available directly and always uses the MaxMind database.
+The CEL condition function `remoteAddress.asn() == 13335` is also available directly and always uses the MaxMind ASN database.
 
 The old `asn:` field under a `networks` entry still works (matching this new default RADb behavior) but is deprecated in favor of the `asns` section above.
+
+### Country-based matching
+
+Clients can be matched by the country of their IP with the CEL condition function `remoteAddress.country()`. It returns the uppercase [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) code:
+
+```yaml
+rules:
+  - name: challenge-countries
+    conditions:
+      - 'remoteAddress.country() in ["CN", "RU"]'
+    action: challenge
+    settings:
+      challenges: [js-refresh]
+```
+
+This needs a local [MaxMind GeoLite2-Country or GeoLite2-City](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data) `.mmdb` database, passed with `--maxmind-country-database /path/to/GeoLite2-Country.mmdb` (or `maxmind-country-database:` in the config file). It is separate from the ASN database, as GeoLite2-ASN has no country data. Like the ASN database, it is watched and reloaded automatically on change. go-away fails to start if a condition uses `country()` and no country database is configured.
+
+The country where the IP is located is returned, falling back to the country the IP block is registered to. When the database has no country for the IP, an empty string is returned.
+
+Take care with negated conditions such as `remoteAddress.country() != "DE"`. Localhost, private networks (`10.0.0.0/8`, `192.168.0.0/16`, `fc00::/7`, ...) and CGNAT addresses have no country, so they match too. Internal monitoring, health checks and other tools on your own network then get challenged, and most of them can't solve one. If go-away runs behind a reverse proxy without `client-ip-header` set, every request comes from the proxy's private address and every client is challenged.
+
+Let your own networks through with a `pass` rule placed before the country rule. The `localhost` and `private` networks are defined in [examples/snippets/networks-private.yml](examples/snippets/networks-private.yml):
+
+```yaml
+rules:
+  - name: allow-private-networks
+    conditions:
+      - 'remoteAddress.network("localhost")'
+      - 'remoteAddress.network("private")'
+    action: pass
+
+  - name: challenge-foreign
+    conditions:
+      - 'remoteAddress.country() != "DE"'
+    action: challenge
+    settings:
+      challenges: [js-refresh]
+```
+
+Or exclude unknown countries in the condition itself:
+
+```yaml
+    conditions:
+      - 'remoteAddress.country() != "" && remoteAddress.country() != "DE"'
+```
+
+The `pass` rule is usually the better choice, as it also covers your network, ASN and other rules. Positive matches such as `remoteAddress.country() in ["CN", "RU"]` never match an empty string, so they don't need either.
 
 ### Allowing networks and ASNs
 

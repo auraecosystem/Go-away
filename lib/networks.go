@@ -32,13 +32,13 @@ func (emptyMatcher) Contains(ip net.IP) (bool, error) {
 }
 
 type asnMatcher struct {
-	name      string
-	asns      map[uint]string
-	maxMindDB *utils.MaxMindDB
+	name         string
+	asns         map[uint]string
+	maxMindASNDB *utils.MaxMindDB
 }
 
 func (m *asnMatcher) Contains(ip net.IP) (bool, error) {
-	asn, err := m.maxMindDB.GetASN(ip)
+	asn, err := m.maxMindASNDB.GetASN(ip)
 	if err != nil {
 		slog.Debug("maxmind ASN lookup failed", "asn-group", m.name, "remoteAddress", ip.String(), "error", err)
 		return false, err
@@ -171,8 +171,8 @@ func (state *State) initNetworks(p policy.Policy) error {
 				continue
 			}
 
-			if state.maxMindDB == nil {
-				return fmt.Errorf("asn group %q entry %s requires MaxMind database but none is configured", k, e.Source())
+			if state.maxMindASNDB == nil {
+				return fmt.Errorf("asn group %q entry %s requires MaxMind ASN database but none is configured", k, e.Source())
 			}
 			s := &listSource[policy.ASNRecord]{
 				name:     e.Source(),
@@ -229,7 +229,7 @@ func buildPrefixMatcher(kind, name, message string) func([]net.IPNet) networkMat
 
 func (state *State) buildASNMatcher(name string) func([]policy.ASNRecord) networkMatcher {
 	return func(records []policy.ASNRecord) networkMatcher {
-		m := &asnMatcher{name: name, asns: make(map[uint]string, len(records)), maxMindDB: state.maxMindDB}
+		m := &asnMatcher{name: name, asns: make(map[uint]string, len(records)), maxMindASNDB: state.maxMindASNDB}
 		for _, record := range records {
 			// keep the first non-empty comment for duplicated ASNs
 			if comment, ok := m.asns[record.ASN]; !ok || comment == "" {

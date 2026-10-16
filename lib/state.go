@@ -28,10 +28,12 @@ import (
 type State struct {
 	client *http.Client
 	// listClient downloads network and ASN lists, separate from client so it can have its own timeout
-	listClient *http.Client
-	radb       *utils.RADb
-	maxMindDB  *utils.MaxMindDB
-	urlPath    string
+	listClient   *http.Client
+	radb         *utils.RADb
+	maxMindASNDB *utils.MaxMindDB
+	// maxMindCountryDB is a separate GeoLite2-Country/City database, the ASN database has no country data
+	maxMindCountryDB *utils.MaxMindDB
+	urlPath          string
 
 	programEnv *cel.Env
 
@@ -74,10 +76,17 @@ func NewState(p policy.Policy, opt settings.Settings, settings policy.StateSetti
 		return nil, fmt.Errorf("failed to initialize RADb client: %w", err)
 	}
 
-	if opt.MaxMindDatabase != "" {
-		state.maxMindDB, err = utils.NewMaxMindDB(opt.MaxMindDatabase)
+	if opt.MaxMindASNDatabase != "" {
+		state.maxMindASNDB, err = utils.NewMaxMindDB(opt.MaxMindASNDatabase)
 		if err != nil {
-			return nil, fmt.Errorf("failed to initialize MaxMind database: %w", err)
+			return nil, fmt.Errorf("failed to initialize MaxMind ASN database: %w", err)
+		}
+	}
+
+	if opt.MaxMindCountryDatabase != "" {
+		state.maxMindCountryDB, err = utils.NewMaxMindDB(opt.MaxMindCountryDatabase)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize MaxMind country database: %w", err)
 		}
 	}
 
@@ -217,8 +226,11 @@ func (state *State) Close() error {
 	case <-state.close:
 	default:
 		close(state.close)
-		if state.maxMindDB != nil {
-			state.maxMindDB.Close()
+		if state.maxMindASNDB != nil {
+			state.maxMindASNDB.Close()
+		}
+		if state.maxMindCountryDB != nil {
+			state.maxMindCountryDB.Close()
 		}
 		for _, c := range state.challenges {
 			if c.Object != nil {

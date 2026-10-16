@@ -21,8 +21,8 @@ import (
 )
 
 func TestAsnMatcherLogging(t *testing.T) {
-	mmdb := createTestMMDB(t)
-	m := &asnMatcher{name: "test-group", asns: map[uint]string{13335: "Cloudflare"}, maxMindDB: mmdb}
+	mmdb := createTestASNMMDB(t)
+	m := &asnMatcher{name: "test-group", asns: map[uint]string{13335: "Cloudflare"}, maxMindASNDB: mmdb}
 
 	t.Run("logs matched lookup", func(t *testing.T) {
 		buf := captureDebugLogs(t)
@@ -107,7 +107,7 @@ func waitFor(t *testing.T, what string, cond func() bool) {
 
 func newTestNetworkState(t *testing.T) *State {
 	t.Helper()
-	state := &State{listClient: newListClient(listFetchTimeout), maxMindDB: createTestMMDB(t), close: make(chan struct{})}
+	state := &State{listClient: newListClient(listFetchTimeout), maxMindASNDB: createTestASNMMDB(t), close: make(chan struct{})}
 	t.Cleanup(func() { close(state.close) })
 	return state
 }
@@ -259,9 +259,9 @@ func TestInitNetworksASNGroups(t *testing.T) {
 		}
 
 		state := newTestNetworkState(t)
-		state.maxMindDB = nil
-		if err := state.initNetworks(asnPolicy(policy.ASNEntry{ASN: &asn, LookupMethod: policy.LookupMethodMaxMind})); err == nil || !strings.Contains(err.Error(), "requires MaxMind database") {
-			t.Errorf("expected missing MaxMind database error, got %v", err)
+		state.maxMindASNDB = nil
+		if err := state.initNetworks(asnPolicy(policy.ASNEntry{ASN: &asn, LookupMethod: policy.LookupMethodMaxMind})); err == nil || !strings.Contains(err.Error(), "requires MaxMind ASN database") {
+			t.Errorf("expected missing MaxMind ASN database error, got %v", err)
 		}
 	})
 }

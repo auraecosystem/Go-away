@@ -22,6 +22,15 @@ type asnRecord struct {
 	AutonomousSystemNumber uint `maxminddb:"autonomous_system_number"`
 }
 
+type countryRecord struct {
+	Country struct {
+		IsoCode string `maxminddb:"iso_code"`
+	} `maxminddb:"country"`
+	RegisteredCountry struct {
+		IsoCode string `maxminddb:"iso_code"`
+	} `maxminddb:"registered_country"`
+}
+
 func NewMaxMindDB(path string) (*MaxMindDB, error) {
 	db, err := maxminddb.Open(path)
 	if err != nil {
@@ -95,4 +104,21 @@ func (m *MaxMindDB) GetASN(ip net.IP) (uint, error) {
 		return 0, fmt.Errorf("no ASN found for IP %s", ip)
 	}
 	return record.AutonomousSystemNumber, nil
+}
+
+// GetCountry returns the ISO 3166-1 alpha-2 country code for the given IP address,
+// falling back to the registered country when no location country is known.
+// An empty string is returned when the database has no country for the IP.
+func (m *MaxMindDB) GetCountry(ip net.IP) (string, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var record countryRecord
+	err := m.db.Lookup(ip, &record)
+	if err != nil {
+		return "", err
+	}
+	if record.Country.IsoCode != "" {
+		return record.Country.IsoCode, nil
+	}
+	return record.RegisteredCountry.IsoCode, nil
 }
