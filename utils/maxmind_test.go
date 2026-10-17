@@ -15,9 +15,9 @@ import (
 //
 // Records inserted:
 //
-//	1.0.0.0/24 → ASN 13335
-//	2.0.0.0/24 → ASN 13335
-//	3.0.0.0/24 → ASN 15169
+//	1.0.0.0/24 → ASN 13335, organization CLOUDFLARENET
+//	2.0.0.0/24 → ASN 13335, no organization
+//	3.0.0.0/24 → ASN 15169, organization GOOGLE
 func createTestASNMMDB(t *testing.T) string {
 	t.Helper()
 
@@ -32,19 +32,24 @@ func createTestASNMMDB(t *testing.T) string {
 	entries := []struct {
 		cidr string
 		asn  uint32
+		org  string
 	}{
-		{"1.0.0.0/24", 13335},
-		{"2.0.0.0/24", 13335},
-		{"3.0.0.0/24", 15169},
+		{"1.0.0.0/24", 13335, "CLOUDFLARENET"},
+		{"2.0.0.0/24", 13335, ""},
+		{"3.0.0.0/24", 15169, "GOOGLE"},
 	}
 	for _, e := range entries {
 		_, network, err := net.ParseCIDR(e.cidr)
 		if err != nil {
 			t.Fatalf("failed to parse CIDR %s: %v", e.cidr, err)
 		}
-		if err := writer.Insert(network, mmdbtype.Map{
+		record := mmdbtype.Map{
 			mmdbtype.String("autonomous_system_number"): mmdbtype.Uint32(e.asn),
-		}); err != nil {
+		}
+		if e.org != "" {
+			record[mmdbtype.String("autonomous_system_organization")] = mmdbtype.String(e.org)
+		}
+		if err := writer.Insert(network, record); err != nil {
 			t.Fatalf("failed to insert %s: %v", e.cidr, err)
 		}
 	}
@@ -132,6 +137,38 @@ func TestGetASN(t *testing.T) {
 			t.Fatal("expected error for unregistered IP, got nil")
 		}
 	})
+}
+
+func TestGetASNOrg(t *testing.T) {
+	path := createTestASNMMDB(t)
+	db, err := NewMaxMindDB(path)
+	if err != nil {
+		t.Fatalf("setup: %v", err)
+	}
+	t.Cleanup(db.Close)
+
+	tests := []struct {
+		ip  string
+		asn uint
+		org string
+	}{
+		{"1.0.0.1", 13335, "CLOUDFLARENET"},
+		{"2.0.0.1", 13335, ""},
+		{"3.0.0.1", 15169, "GOOGLE"},
+	}
+	for _, tt := range tests {
+		asn, org, err := db.GetASNOrg(net.ParseIP(tt.ip))
+		if err != nil {
+			t.Fatalf("%s: unexpected error: %v", tt.ip, err)
+		}
+		if asn != tt.asn || org != tt.org {
+			t.Fatalf("%s: got AS%d %q, want AS%d %q", tt.ip, asn, org, tt.asn, tt.org)
+		}
+	}
+
+	if _, _, err := db.GetASNOrg(net.ParseIP("4.0.0.1")); err == nil {
+		t.Fatal("expected error for unregistered IP, got nil")
+	}
 }
 
 // createTestCountryMMDB writes a minimal GeoLite2-Country database to a temp

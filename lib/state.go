@@ -45,6 +45,8 @@ type State struct {
 	settings policy.StateSettings
 
 	networks map[string]func() networkMatcher
+	// asnComments has one entry per ASN group, sorted by name
+	asnComments []*asnGroupComments
 
 	challenges challenge.Register
 

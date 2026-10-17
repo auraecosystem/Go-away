@@ -6,10 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"maps"
 	"math/rand/v2"
 	"net"
 	"net/http"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -49,6 +51,37 @@ func (m *asnMatcher) Contains(ip net.IP) (bool, error) {
 	}
 	slog.Debug("maxmind ASN lookup no match", "asn-group", m.name, "remoteAddress", ip.String(), "asn", asn)
 	return false, nil
+}
+
+// asnGroupComments holds the policy comments an ASN group knows, for showing them in templates
+type asnGroupComments struct {
+	// radb has the comments of RADb entries, as these match by prefix and never see the client ASN
+	radb map[uint]string
+	// maxmind is set once a condition using the group has loaded its MaxMind entries
+	maxmind atomic.Pointer[listGroup[policy.ASNRecord]]
+}
+
+func (c *asnGroupComments) comment(asn uint) string {
+	if comment := c.radb[asn]; comment != "" {
+		return comment
+	}
+	if g := c.maxmind.Load(); g != nil {
+		if m, ok := g.current.Load().networkMatcher.(*asnMatcher); ok {
+			return m.asns[asn]
+		}
+	}
+	return ""
+}
+
+// ASNComment returns the first non-empty policy comment of the ASN, checking ASN groups in name order.
+// MaxMind entries only count once their group is loaded, which happens when policy conditions use it.
+func (state *State) ASNComment(asn uint) string {
+	for _, c := range state.asnComments {
+		if comment := c.comment(asn); comment != "" {
+			return comment
+		}
+	}
+	return ""
 }
 
 // anyMatcher matches if any of its matchers does, checked in order.
@@ -133,7 +166,9 @@ func (state *State) initNetworks(p policy.Policy) error {
 		})
 	}
 
-	for k, asnGroup := range p.ASNs {
+	state.asnComments = nil
+	for _, k := range slices.Sorted(maps.Keys(p.ASNs)) {
+		asnGroup := p.ASNs[k]
 		if len(asnGroup) == 0 {
 			slog.Warn("asn group has no entries", "asn-group", k)
 			state.networks[k] = func() networkMatcher { return emptyMatcher{} }
@@ -154,12 +189,17 @@ func (state *State) initNetworks(p policy.Policy) error {
 			codec: asnRecordCodec,
 			build: state.buildASNMatcher(k),
 		}
+		comments := &asnGroupComments{radb: make(map[uint]string)}
+		state.asnComments = append(state.asnComments, comments)
 		for i, e := range asnGroup {
 			if err := e.Validate(); err != nil {
 				return fmt.Errorf("asn group %q entry %d (%s): %w", k, i, e.Source(), err)
 			}
 
 			if e.LookupMethod != policy.LookupMethodMaxMind {
+				if comments.radb[uint(*e.ASN)] == "" {
+					comments.radb[uint(*e.ASN)] = e.Comment
+				}
 				radb.sources = append(radb.sources, &listSource[net.IPNet]{
 					name:     e.Source(),
 					cacheKey: fmt.Sprintf("asn-%s-%d", k, *e.ASN),
@@ -203,6 +243,7 @@ func (state *State) initNetworks(p policy.Policy) error {
 			}
 			if len(maxmind.sources) > 0 {
 				matchers = append(matchers, maxmind.start(state.close))
+				comments.maxmind.Store(maxmind)
 			}
 			if len(matchers) == 1 {
 				return matchers[0]

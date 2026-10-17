@@ -266,6 +266,40 @@ func TestInitNetworksASNGroups(t *testing.T) {
 	})
 }
 
+func TestASNComment(t *testing.T) {
+	regex := testASNRegex
+	file := filepath.Join(t.TempDir(), "asn.txt")
+	writeFile(t, file, "AS15169 # Google\nAS64496 # From list\n", time.Now())
+	cloudflare, example := 13335, 64496
+
+	state := newTestNetworkState(t)
+	err := state.initNetworks(policy.Policy{ASNs: map[string][]policy.ASNEntry{
+		// RADb entries are never loaded here, their comments come from the policy itself
+		"b-radb": {{ASN: &cloudflare, Comment: "Cloudflare B"}, {ASN: &example}},
+		"a-radb": {{ASN: &cloudflare, Comment: "Cloudflare A"}},
+		"c-list": {{File: &file, Regex: &regex, LookupMethod: policy.LookupMethodMaxMind}},
+	}})
+	if err != nil {
+		t.Fatalf("initNetworks: %v", err)
+	}
+
+	check := func(asn uint, want string) {
+		t.Helper()
+		if got := state.ASNComment(asn); got != want {
+			t.Fatalf("AS%d: comment %q, want %q", asn, got, want)
+		}
+	}
+
+	check(13335, "Cloudflare A")
+	// lists only count once their group is loaded
+	check(15169, "")
+	state.networks["c-list"]()
+	check(15169, "Google")
+	// an empty comment in an earlier group does not hide a later one
+	check(64496, "From list")
+	check(1, "")
+}
+
 // valuesMatcher exposes the values a test listGroup was built from.
 type valuesMatcher []string
 

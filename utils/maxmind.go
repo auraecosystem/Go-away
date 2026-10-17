@@ -22,6 +22,11 @@ type asnRecord struct {
 	AutonomousSystemNumber uint `maxminddb:"autonomous_system_number"`
 }
 
+type asnOrgRecord struct {
+	AutonomousSystemNumber       uint   `maxminddb:"autonomous_system_number"`
+	AutonomousSystemOrganization string `maxminddb:"autonomous_system_organization"`
+}
+
 type countryRecord struct {
 	Country struct {
 		IsoCode string `maxminddb:"iso_code"`
@@ -104,6 +109,22 @@ func (m *MaxMindDB) GetASN(ip net.IP) (uint, error) {
 		return 0, fmt.Errorf("no ASN found for IP %s", ip)
 	}
 	return record.AutonomousSystemNumber, nil
+}
+
+// GetASNOrg returns the ASN number and its organization name for the given IP address.
+// The organization is empty when the database has none for the ASN.
+func (m *MaxMindDB) GetASNOrg(ip net.IP) (uint, string, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var record asnOrgRecord
+	err := m.db.Lookup(ip, &record)
+	if err != nil {
+		return 0, "", err
+	}
+	if record.AutonomousSystemNumber == 0 {
+		return 0, "", fmt.Errorf("no ASN found for IP %s", ip)
+	}
+	return record.AutonomousSystemNumber, record.AutonomousSystemOrganization, nil
 }
 
 // GetCountry returns the ISO 3166-1 alpha-2 country code for the given IP address,
