@@ -27,7 +27,12 @@ func captureDebugLogs(t *testing.T) *bytes.Buffer {
 	return &buf
 }
 
-func createTestASNMMDB(t *testing.T) *utils.MaxMindDB {
+// writeTestASNMMDB writes a minimal GeoLite2-ASN database to a temp file and returns its path.
+//
+//	1.0.0.0/24 → ASN 13335, organization CLOUDFLARENET
+//	2.0.0.0/24 → ASN 13335, no organization
+//	3.0.0.0/24 → ASN 15169, organization GOOGLE
+func writeTestASNMMDB(t *testing.T) string {
 	t.Helper()
 
 	writer, err := mmdbwriter.New(mmdbwriter.Options{
@@ -41,19 +46,24 @@ func createTestASNMMDB(t *testing.T) *utils.MaxMindDB {
 	entries := []struct {
 		cidr string
 		asn  uint32
+		org  string
 	}{
-		{"1.0.0.0/24", 13335},
-		{"2.0.0.0/24", 13335},
-		{"3.0.0.0/24", 15169},
+		{"1.0.0.0/24", 13335, "CLOUDFLARENET"},
+		{"2.0.0.0/24", 13335, ""},
+		{"3.0.0.0/24", 15169, "GOOGLE"},
 	}
 	for _, e := range entries {
 		_, network, err := net.ParseCIDR(e.cidr)
 		if err != nil {
 			t.Fatalf("failed to parse CIDR %s: %v", e.cidr, err)
 		}
-		if err := writer.Insert(network, mmdbtype.Map{
+		record := mmdbtype.Map{
 			mmdbtype.String("autonomous_system_number"): mmdbtype.Uint32(e.asn),
-		}); err != nil {
+		}
+		if e.org != "" {
+			record[mmdbtype.String("autonomous_system_organization")] = mmdbtype.String(e.org)
+		}
+		if err := writer.Insert(network, record); err != nil {
 			t.Fatalf("failed to insert %s: %v", e.cidr, err)
 		}
 	}
@@ -73,7 +83,12 @@ func createTestASNMMDB(t *testing.T) *utils.MaxMindDB {
 	}
 	f.Close()
 
-	db, err := utils.NewMaxMindDB(f.Name())
+	return f.Name()
+}
+
+func createTestASNMMDB(t *testing.T) *utils.MaxMindDB {
+	t.Helper()
+	db, err := utils.NewMaxMindDB(writeTestASNMMDB(t))
 	if err != nil {
 		t.Fatalf("failed to open test mmdb: %v", err)
 	}

@@ -6,6 +6,7 @@ import (
 	"git.gammaspectra.live/git/go-away/utils"
 	"github.com/google/cel-go/cel"
 	"log/slog"
+	"net"
 	"net/http"
 )
 
@@ -118,4 +119,11 @@ type StateInterface interface {
 	Strings() utils.Strings
 
 	GetBackend(host string) http.Handler
+
+	// HasASNDatabase reports whether a MaxMind ASN database is configured
+	HasASNDatabase() bool
+	// LookupASN returns the ASN of the address and its organization name from the MaxMind ASN database
+	LookupASN(ip net.IP) (asn uint, org string, err error)
+	// ASNComment returns the first non-empty policy comment of the ASN across ASN groups
+	ASNComment(asn uint) string
 }

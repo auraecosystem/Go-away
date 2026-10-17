@@ -39,7 +39,7 @@ func init() {
 			return nil, fmt.Errorf("no registered challenges found in rule %s", ruleName)
 		}
 
-		headers, err := parseHeaderTemplates(params.Headers)
+		headers, err := parseHeaderTemplates(state, params.Headers)
 		if err != nil {
 			return nil, err
 		}

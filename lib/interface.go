@@ -2,11 +2,13 @@ package lib
 
 import (
 	"crypto/ed25519"
+	"errors"
 	"git.gammaspectra.live/git/go-away/lib/challenge"
 	"git.gammaspectra.live/git/go-away/lib/policy"
 	"git.gammaspectra.live/git/go-away/utils"
 	"github.com/google/cel-go/cel"
 	"log/slog"
+	"net"
 	"net/http"
 )
 
@@ -32,6 +34,17 @@ func (state *State) PrivateKeyFingerprint() []byte {
 
 func (state *State) PublicKey() ed25519.PublicKey {
 	return state.publicKey
+}
+
+func (state *State) HasASNDatabase() bool {
+	return state.maxMindASNDB != nil
+}
+
+func (state *State) LookupASN(ip net.IP) (uint, string, error) {
+	if state.maxMindASNDB == nil {
+		return 0, "", errors.New("no MaxMind ASN database configured")
+	}
+	return state.maxMindASNDB.GetASNOrg(ip)
 }
 
 func (state *State) UrlPath() string {

@@ -34,14 +34,14 @@ func init() {
 		c := Code{code: params.Code}
 
 		if params.Body != "" {
-			tmpl, err := template.New("body").Parse(params.Body)
+			tmpl, err := parseTemplate(state, "body", params.Body)
 			if err != nil {
-				return nil, errors.New("body: invalid template: " + err.Error())
+				return nil, err
 			}
 			c.body = tmpl
 		}
 
-		headers, err := parseHeaderTemplates(params.Headers)
+		headers, err := parseHeaderTemplates(state, params.Headers)
 		if err != nil {
 			return nil, err
 		}
@@ -66,15 +66,21 @@ var CodeDefaultSettings = CodeSettings{}
 //
 //	      # Optional map of response headers to set.
 //	      # Each value is a Go text/template string with access to the following fields:
-//	      #   .Host       — request Host header (e.g. "example.com")
-//	      #   .Method     — HTTP method (e.g. "GET")
-//	      #   .Path       — URL path (e.g. "/foo/bar")
-//	      #   .RawQuery   — raw query string without leading "?" (e.g. "a=1&b=2")
-//	      #   .RequestURI — path and query combined (e.g. "/foo/bar?a=1&b=2")
-//	      #   .Proto      — HTTP protocol (e.g. "HTTP/1.1")
+//	      #   .Host          — request Host header (e.g. "example.com")
+//	      #   .Method        — HTTP method (e.g. "GET")
+//	      #   .Path          — URL path (e.g. "/foo/bar")
+//	      #   .RawQuery      — raw query string without leading "?" (e.g. "a=1&b=2")
+//	      #   .RequestURI    — path and query combined (e.g. "/foo/bar?a=1&b=2")
+//	      #   .Proto         — HTTP protocol (e.g. "HTTP/1.1")
+//	      #   .RemoteAddress — client IP address (e.g. "192.0.2.1")
+//	      #   .ASN           — client ASN, 0 when unknown (e.g. 13335)
+//	      #   .ASNOrg        — ASN organization name from MaxMind (e.g. "CLOUDFLARENET")
+//	      #   .ASNComment    — ASN comment from the first ASN group in name order that has one
+//	      #   The ASN fields require a MaxMind ASN database.
 //	      headers:
 //	        X-Original-Url: "https://{{.Host}}{{.RequestURI}}"
 //	        X-Original-Method: "{{.Method}}"
+//	        X-Client-Network: "{{or .ASNComment .ASNOrg}}"
 //
 //	      # Optional response body. Go text/template string with the same fields as headers.
 //	      body: "Access denied for {{.Host}}"
