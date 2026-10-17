@@ -54,7 +54,8 @@ type RequestData struct {
 	cookieName      string
 	issuedChallenge string
 
-	challengeResponseCode int
+	challengeResponseCode    int
+	challengeResponseHeaders http.Header
 
 	ExtraHeaders http.Header
 
@@ -178,6 +179,16 @@ func (d *RequestData) ChallengeResponseCode() int {
 		return d.challengeResponseCode
 	}
 	return d.State.Settings().ChallengeResponseCode
+}
+
+// SetChallengeResponseHeaders sets extra headers challenge pages are served with on this request
+func (d *RequestData) SetChallengeResponseHeaders(headers http.Header) {
+	d.challengeResponseHeaders = headers
+}
+
+// ChallengeResponseHeaders returns the extra headers to serve challenge pages with, nil if none were set
+func (d *RequestData) ChallengeResponseHeaders() http.Header {
+	return d.challengeResponseHeaders
 }
 
 func (d *RequestData) SetOpt(n, v string) {

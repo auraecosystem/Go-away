@@ -39,6 +39,11 @@ func init() {
 			return nil, fmt.Errorf("no registered challenges found in rule %s", ruleName)
 		}
 
+		headers, err := parseHeaderTemplates(params.Headers)
+		if err != nil {
+			return nil, err
+		}
+
 		passAction := policy.RuleAction(strings.ToUpper(params.PassAction))
 		passHandler, ok := Register[passAction]
 		if !ok {
@@ -64,6 +69,7 @@ func init() {
 		return Challenge{
 			RuleHash:   ruleHash,
 			Code:       params.Code,
+			Headers:    headers,
 			Continue:   cont,
 			Challenges: regs,
 
@@ -90,6 +96,9 @@ type ChallengeSettings struct {
 	Code       int      `yaml:"http-code"`
 	Challenges []string `yaml:"challenges"`
 
+	// Headers Response headers to set on challenge pages, as Go text/template strings with the same fields as the CODE action
+	Headers map[string]string `yaml:"headers"`
+
 	PassAction   string   `yaml:"pass"`
 	PassSettings ast.Node `yaml:"pass-settings"`
 
@@ -101,7 +110,9 @@ type ChallengeSettings struct {
 type Challenge struct {
 	RuleHash string
 	// Code HTTP code to serve challenge pages with, 0 uses the global setting
-	Code       int
+	Code int
+	// Headers extra headers to serve challenge pages with
+	Headers    headerTemplates
 	Continue   bool
 	Challenges []*challenge.Registration
 
@@ -129,6 +140,11 @@ func (a Challenge) Handle(logger *slog.Logger, w http.ResponseWriter, r *http.Re
 	}
 	// none matched, issue challenges in sequential priority
 	data.SetChallengeResponseCode(a.Code)
+	if len(a.Headers) > 0 {
+		headers := make(http.Header)
+		a.Headers.render(logger, newRequestTemplateData(r), headers)
+		data.SetChallengeResponseHeaders(headers)
+	}
 	for _, reg := range a.Challenges {
 		result := data.ChallengeVerify[reg.Id()]
 		state := data.ChallengeState[reg.Id()]

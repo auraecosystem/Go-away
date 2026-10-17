@@ -102,6 +102,9 @@ func (state *State) ChallengePage(w http.ResponseWriter, r *http.Request, status
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	for k, v := range data.ChallengeResponseHeaders() {
+		w.Header()[k] = v
+	}
 
 	buf := bytes.NewBuffer(make([]byte, 0, 8192))
 

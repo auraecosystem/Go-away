@@ -34,7 +34,7 @@ const backendBody = "backend-ok"
 const testHCaptchaSecret = "test-secret"
 const testHCaptchaToken = "test-hcaptcha-token"
 
-// testRuleHttpCode is set as http-code on the /code/ rules, to differ from the global 418
+// testRuleHttpCode is set as http-code on the /code/ and /check/ rules, to differ from the global 418
 const testRuleHttpCode = http.StatusTooManyRequests
 
 var challengeTemplates = []string{"anubis", "forgejo"}
@@ -114,7 +114,8 @@ func newChallengeEnv(t *testing.T, template string, http2 bool) *challengeEnv {
 	policyYaml.WriteString("rules:\n")
 	for name := range challenges {
 		fmt.Fprintf(&policyYaml, "  - {name: %s, conditions: ['path == \"/c/%s\"'], action: challenge, settings: {challenges: [%s]}}\n", name, name, name)
-		fmt.Fprintf(&policyYaml, "  - {name: %s-code, conditions: ['path == \"/code/%s\"'], action: challenge, settings: {http-code: %d, challenges: [%s]}}\n", name, name, testRuleHttpCode, name)
+		fmt.Fprintf(&policyYaml, "  - {name: %s-code, conditions: ['path == \"/code/%s\"'], action: challenge, settings: {http-code: %d, headers: {X-Challenge-Path: '{{.Path}}'}, challenges: [%s]}}\n", name, name, testRuleHttpCode, name)
+		fmt.Fprintf(&policyYaml, "  - {name: %s-check, conditions: ['path == \"/check/%s\"'], action: check, settings: {http-code: %d, headers: {X-Challenge-Path: '{{.Path}}'}, challenges: [%s]}}\n", name, name, testRuleHttpCode, name)
 	}
 
 	p, err := policy.NewPolicy(strings.NewReader(policyYaml.String()))
@@ -607,18 +608,31 @@ func TestPreloadLinkChallengePasses(t *testing.T) {
 	expectBackend(t, response{code: res.StatusCode, header: res.Header, body: string(body), url: res.Request.URL}, "preload-link")
 }
 
-func TestChallengeRuleHttpCode(t *testing.T) {
+func TestChallengeRuleHttpCodeAndHeaders(t *testing.T) {
 	env := newChallengeEnv(t, "anubis", false)
 
-	// every runtime that serves a challenge page must use the rule http-code
+	// every runtime that serves a challenge page must use the rule http-code and headers, on both challenge and check rules
 	for _, name := range []string{"header-refresh", "meta-refresh", "js-refresh", "resource-load", "js-pow-sha256", "hcaptcha"} {
 		t.Run(name, func(t *testing.T) {
 			client := env.client(t)
-			if res := get(t, client, env.url("/c/"+name)); res.code != http.StatusTeapot {
+			res := get(t, client, env.url("/c/"+name))
+			if res.code != http.StatusTeapot {
 				t.Fatalf("global code: status %d, want %d", res.code, http.StatusTeapot)
 			}
-			if res := get(t, client, env.url("/code/"+name)); res.code != testRuleHttpCode {
-				t.Fatalf("rule code: status %d, want %d", res.code, testRuleHttpCode)
+			if got := res.header.Get("X-Challenge-Path"); got != "" {
+				t.Fatalf("global headers: X-Challenge-Path %q, want none", got)
+			}
+
+			// /code/ is served by a challenge rule, /check/ by a check rule
+			for _, prefix := range []string{"/code/", "/check/"} {
+				path := prefix + name
+				res = get(t, client, env.url(path))
+				if res.code != testRuleHttpCode {
+					t.Fatalf("%s: status %d, want %d", path, res.code, testRuleHttpCode)
+				}
+				if got := res.header.Get("X-Challenge-Path"); got != path {
+					t.Fatalf("%s: X-Challenge-Path %q, want %q", path, got, path)
+				}
 			}
 		})
 	}
