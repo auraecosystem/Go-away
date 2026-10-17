@@ -76,11 +76,13 @@ var CodeDefaultSettings = CodeSettings{}
 //	      #   .ASN           — client ASN, 0 when unknown (e.g. 13335)
 //	      #   .ASNOrg        — ASN organization name from MaxMind (e.g. "CLOUDFLARENET")
 //	      #   .ASNComment    — ASN comment from the first ASN group in name order that has one
-//	      #   The ASN fields require a MaxMind ASN database.
+//	      #   .Country       — client ISO 3166-1 alpha-2 country code, empty when unknown (e.g. "HU")
+//	      #   The ASN fields require a MaxMind ASN database, .Country a MaxMind country database.
 //	      headers:
 //	        X-Original-Url: "https://{{.Host}}{{.RequestURI}}"
 //	        X-Original-Method: "{{.Method}}"
 //	        X-Client-Network: "{{or .ASNComment .ASNOrg}}"
+//	        X-Client-Country: "{{.Country}}"
 //
 //	      # Optional response body. Go text/template string with the same fields as headers.
 //	      body: "Access denied for {{.Host}}"

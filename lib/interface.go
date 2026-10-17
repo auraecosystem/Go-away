@@ -47,6 +47,17 @@ func (state *State) LookupASN(ip net.IP) (uint, string, error) {
 	return state.maxMindASNDB.GetASNOrg(ip)
 }
 
+func (state *State) HasCountryDatabase() bool {
+	return state.maxMindCountryDB != nil
+}
+
+func (state *State) LookupCountry(ip net.IP) (string, error) {
+	if state.maxMindCountryDB == nil {
+		return "", errors.New("no MaxMind country database configured")
+	}
+	return state.maxMindCountryDB.GetCountry(ip)
+}
+
 func (state *State) UrlPath() string {
 	return state.urlPath
 }

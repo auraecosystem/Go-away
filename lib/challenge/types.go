@@ -126,4 +126,8 @@ type StateInterface interface {
 	LookupASN(ip net.IP) (asn uint, org string, err error)
 	// ASNComment returns the first non-empty policy comment of the ASN across ASN groups
 	ASNComment(asn uint) string
+	// HasCountryDatabase reports whether a MaxMind country database is configured
+	HasCountryDatabase() bool
+	// LookupCountry returns the ISO 3166-1 alpha-2 country code of the address from the MaxMind country database
+	LookupCountry(ip net.IP) (string, error)
 }

@@ -14,7 +14,7 @@ import (
 )
 
 // requestTemplateData holds the request fields available to header and body templates.
-// The ASN fields are methods, so the MaxMind lookup only runs for templates that use them.
+// The ASN and country fields are methods, so the MaxMind lookups only run for templates that use them.
 type requestTemplateData struct {
 	Host          string
 	Method        string
@@ -30,6 +30,9 @@ type requestTemplateData struct {
 	asnLooked bool
 	asn       uint
 	asnOrg    string
+
+	countryLooked bool
+	country       string
 }
 
 func newRequestTemplateData(r *http.Request) *requestTemplateData {
@@ -77,49 +80,68 @@ func (d *requestTemplateData) ASNComment() string {
 	return ""
 }
 
-var asnTemplateFields = []string{"ASN", "ASNOrg", "ASNComment"}
+// Country returns the ISO 3166-1 alpha-2 country code of the client, empty when unknown
+func (d *requestTemplateData) Country() string {
+	if !d.countryLooked {
+		d.countryLooked = true
+		d.country, _ = d.state.LookupCountry(d.addr.AsSlice())
+	}
+	return d.country
+}
 
-// usesASN reports whether the template tree references any of the ASN fields
-func usesASN(node parse.Node) bool {
-	isASNField := func(ident []string) bool {
-		return slices.ContainsFunc(ident, func(s string) bool { return slices.Contains(asnTemplateFields, s) })
+var (
+	asnTemplateFields     = []string{"ASN", "ASNOrg", "ASNComment"}
+	countryTemplateFields = []string{"Country"}
+)
+
+// usesFields reports whether the template tree references any of the given fields
+func usesFields(node parse.Node, fields []string) bool {
+	uses := func(n parse.Node) bool { return usesFields(n, fields) }
+	isField := func(ident []string) bool {
+		return slices.ContainsFunc(ident, func(s string) bool { return slices.Contains(fields, s) })
 	}
 	switch n := node.(type) {
 	case *parse.ListNode:
-		return n != nil && slices.ContainsFunc(n.Nodes, usesASN)
+		return n != nil && slices.ContainsFunc(n.Nodes, uses)
 	case *parse.ActionNode:
-		return usesASN(n.Pipe)
+		return uses(n.Pipe)
 	case *parse.PipeNode:
-		return n != nil && slices.ContainsFunc(n.Cmds, func(c *parse.CommandNode) bool { return usesASN(c) })
+		return n != nil && slices.ContainsFunc(n.Cmds, func(c *parse.CommandNode) bool { return uses(c) })
 	case *parse.CommandNode:
-		return slices.ContainsFunc(n.Args, usesASN)
+		return slices.ContainsFunc(n.Args, uses)
 	case *parse.FieldNode:
-		return isASNField(n.Ident)
+		return isField(n.Ident)
 	case *parse.VariableNode:
-		return isASNField(n.Ident)
+		return isField(n.Ident)
 	case *parse.ChainNode:
-		return usesASN(n.Node) || isASNField(n.Field)
+		return uses(n.Node) || isField(n.Field)
 	case *parse.IfNode:
-		return usesASN(n.Pipe) || usesASN(n.List) || usesASN(n.ElseList)
+		return uses(n.Pipe) || uses(n.List) || uses(n.ElseList)
 	case *parse.RangeNode:
-		return usesASN(n.Pipe) || usesASN(n.List) || usesASN(n.ElseList)
+		return uses(n.Pipe) || uses(n.List) || uses(n.ElseList)
 	case *parse.WithNode:
-		return usesASN(n.Pipe) || usesASN(n.List) || usesASN(n.ElseList)
+		return uses(n.Pipe) || uses(n.List) || uses(n.ElseList)
 	case *parse.TemplateNode:
-		return usesASN(n.Pipe)
+		return uses(n.Pipe)
 	}
 	return false
 }
 
-// parseTemplate parses a header or body template, rejecting ASN fields when there is no database to look them up in
+// parseTemplate parses a header or body template, rejecting ASN and country fields when there is no database to look them up in
 func parseTemplate(state challenge.StateInterface, name, text string) (*template.Template, error) {
 	tmpl, err := template.New(name).Parse(text)
 	if err != nil {
 		return nil, errors.New(name + ": invalid template: " + err.Error())
 	}
 	// {{define}} blocks are separate templates, so check all of them
-	if !state.HasASNDatabase() && slices.ContainsFunc(tmpl.Templates(), func(t *template.Template) bool { return usesASN(t.Root) }) {
+	uses := func(fields []string) bool {
+		return slices.ContainsFunc(tmpl.Templates(), func(t *template.Template) bool { return usesFields(t.Root, fields) })
+	}
+	if !state.HasASNDatabase() && uses(asnTemplateFields) {
 		return nil, errors.New(name + ": template uses ASN fields but no MaxMind ASN database is configured")
+	}
+	if !state.HasCountryDatabase() && uses(countryTemplateFields) {
+		return nil, errors.New(name + ": template uses the Country field but no MaxMind country database is configured")
 	}
 	return tmpl, nil
 }
